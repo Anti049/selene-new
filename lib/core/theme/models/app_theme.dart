@@ -1,0 +1,163 @@
+import 'package:flex_color_scheme/flex_color_scheme.dart';
+import 'package:flutter/material.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:selene/core/utils/converters.dart';
+
+part 'app_theme.freezed.dart';
+part 'app_theme.g.dart';
+
+enum ThemeCategory {
+  system('System'),
+  custom('Custom'),
+  site('Sites'),
+  tachiyomi('Tachiyomi'),
+  flex('Flex Color Schemes'),
+  hsr('Honkai: Star Rail');
+
+  const ThemeCategory(this.name);
+
+  final String name;
+}
+
+@freezed
+abstract class AppTheme with _$AppTheme {
+  const AppTheme._();
+
+  const factory AppTheme({
+    required String id,
+    required String name,
+    @Default(ThemeCategory.custom) ThemeCategory category,
+    @ColorConverter() required Color primary,
+    @ColorConverter() Color? secondary,
+    @ColorConverter() Color? tertiary,
+    @ColorConverter() Color? error,
+    @ColorConverter() Color? neutral,
+    @ColorConverter() Color? neutralVariant,
+    @Default(FlexSchemeVariant.tonalSpot) FlexSchemeVariant variant,
+    @Default(false) bool isPrebuilt,
+    @Default(true) bool isEditable,
+  }) = _AppTheme;
+
+  factory AppTheme.fromJson(Map<String, dynamic> json) =>
+      _$AppThemeFromJson(json);
+
+  ColorScheme getColorScheme({
+    required Brightness brightness,
+    required double contrastLevel,
+  }) => SeedColorScheme.fromSeeds(
+    brightness: brightness,
+    primaryKey: primary,
+    secondaryKey: secondary,
+    tertiaryKey: tertiary,
+    errorKey: error,
+    neutralKey: neutral,
+    neutralVariantKey: neutralVariant,
+    variant: variant,
+    useExpressiveOnContainerColors: true,
+    respectMonochromeSeed: true,
+    contrastLevel: contrastLevel,
+  );
+
+  ThemeData light({
+    double blendLevel = 6.0,
+    double contrastLevel = 0.0,
+    FlexSchemeVariant? variant,
+    String? appFont,
+    bool einkMode = false,
+  }) {
+    contrastLevel = einkMode ? 1.0 : contrastLevel;
+    final blend = einkMode ? 0 : blendLevel.toInt();
+    final colorScheme = getColorScheme(
+      brightness: Brightness.light,
+      contrastLevel: contrastLevel,
+    );
+
+    return FlexThemeData.light(
+      useMaterial3: true,
+      colorScheme: colorScheme,
+      variant: variant ?? variant,
+      surfaceMode: einkMode ? FlexSurfaceMode.level : FlexSurfaceMode.level,
+      blendLevel: blend,
+      appBarStyle: FlexAppBarStyle.scaffoldBackground,
+      subThemesData: FlexSubThemesData(
+        interactionEffects: true,
+        blendOnLevel: 10,
+        thinBorderWidth: 2.0,
+        bottomNavigationBarBackgroundSchemeColor: SchemeColor.surfaceContainer,
+        bottomAppBarSchemeColor: SchemeColor.surfaceContainer,
+        inputDecoratorRadius: 24.0,
+        chipRadius: 24.0,
+        dialogBackgroundSchemeColor: SchemeColor.surface,
+        checkboxSchemeColor: SchemeColor.onSurface,
+        textButtonRadius: 8.0,
+        filledButtonRadius: 8.0,
+        elevatedButtonRadius: 8.0,
+        outlinedButtonRadius: 8.0,
+        dialogRadius: 8.0,
+      ),
+      useMaterial3ErrorColors: true,
+      visualDensity: FlexColorScheme.comfortablePlatformDensity,
+      fontFamily: appFont,
+    );
+  }
+
+  ThemeData dark({
+    double blendLevel = 6.0,
+    double contrastLevel = 0.0,
+    FlexSchemeVariant? variant,
+    String? appFont,
+    bool usePureBlack = false,
+    bool einkMode = false,
+  }) {
+    contrastLevel = einkMode ? 1.0 : contrastLevel;
+    final blend = einkMode ? 0 : blendLevel.toInt();
+
+    // Create color scheme
+    final colorScheme = getColorScheme(
+      brightness: Brightness.dark,
+      contrastLevel: contrastLevel,
+    );
+
+    return FlexThemeData.dark(
+      useMaterial3: true,
+      colorScheme: colorScheme,
+      variant: variant ?? variant,
+      surfaceMode: FlexSurfaceMode.level,
+      blendLevel: blend,
+      darkIsTrueBlack: usePureBlack || einkMode,
+      appBarStyle: FlexAppBarStyle.scaffoldBackground,
+      subThemesData: FlexSubThemesData(
+        interactionEffects: true,
+        blendOnLevel: 10,
+        thinBorderWidth: 2.0,
+        // unselectedToggleIsColored: true,
+        // appBarBackgroundSchemeColor:
+        //     usePureBlack || einkMode ? SchemeColor.black : null,
+        appBarBackgroundSchemeColor: SchemeColor.surfaceContainer,
+        bottomNavigationBarBackgroundSchemeColor:
+            usePureBlack || einkMode
+                ? SchemeColor.surfaceDim
+                : SchemeColor.surfaceContainer,
+        bottomAppBarSchemeColor:
+            usePureBlack || einkMode
+                ? SchemeColor.surfaceDim
+                : SchemeColor.surfaceContainer,
+        bottomNavigationBarElevation: 8.0,
+        menuPadding: EdgeInsets.all(0.0),
+        menuSchemeColor: SchemeColor.surfaceContainerHigh,
+        inputDecoratorRadius: 24.0,
+        chipRadius: 24.0,
+        dialogBackgroundSchemeColor: SchemeColor.surface,
+        checkboxSchemeColor: SchemeColor.onSurface,
+        textButtonRadius: 8.0,
+        filledButtonRadius: 8.0,
+        elevatedButtonRadius: 8.0,
+        outlinedButtonRadius: 8.0,
+        dialogRadius: 8.0,
+      ),
+      useMaterial3ErrorColors: true,
+      visualDensity: FlexColorScheme.comfortablePlatformDensity,
+      fontFamily: appFont,
+    );
+  }
+}
