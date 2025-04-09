@@ -2,7 +2,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:selene/core/utils/theming.dart';
-import 'package:selene/features/shell/domain/models/shell_page.dart';
+import 'package:selene/features/shell/models/shell_page.dart';
 import 'package:selene/routing/router.gr.dart';
 
 @RoutePage()

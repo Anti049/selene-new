@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:selene/core/database/database.dart';
-import 'package:selene/core/database/database_provider.dart';
-import 'package:selene/core/theme/theme_provider.dart';
+import 'package:selene/core/database/providers/database_provider.dart';
+import 'package:selene/core/logging/logger_provider.dart';
+import 'package:selene/core/theme/data/system/theme_system.dart';
+import 'package:selene/core/theme/models/app_theme.dart';
+import 'package:selene/core/theme/providers/theme_providers.dart';
 import 'package:selene/routing/router.dart';
 import 'package:system_theme/system_theme.dart';
 
@@ -12,6 +15,30 @@ void main() async {
 
   // Initialize Drift database
   final database = AppDatabase();
+  try {
+    await database.themesDao.ensureDefaultThemes();
+  } catch (e) {
+    debugPrint('Error initializing database: $e');
+  }
+
+  // Create Riverpod container
+  final container = ProviderContainer(
+    overrides: [appDatabaseProvider.overrideWithValue(database)],
+  );
+
+  // Initialize themes
+  AppTheme initialTheme;
+  try {
+    final themeID =
+        'gaziter'; // TODO: Replace with your logic to get the theme ID
+    final themeRepository = container.read(themeRepositoryProvider);
+    initialTheme = await themeRepository.getThemeById(themeID) ?? themeSystem;
+  } catch (e) {
+    container.read(loggerProvider).e('Error getting theme ID: $e');
+    initialTheme = themeSystem;
+  } finally {
+    container.dispose();
+  }
 
   // Initialize system theme
   await SystemTheme.accentColor.load();
@@ -19,7 +46,10 @@ void main() async {
   // Run the app
   runApp(
     ProviderScope(
-      overrides: [appDatabaseProvider.overrideWithValue(database)],
+      overrides: [
+        appDatabaseProvider.overrideWithValue(database),
+        activeThemeProvider.overrideWithValue(initialTheme),
+      ],
       child: MainApp(),
     ),
   );
@@ -42,7 +72,7 @@ class MainApp extends ConsumerWidget {
         try {
           database.themesDao.ensureDefaultThemes(dynamicColor: accent.accent);
         } catch (e) {
-          debugPrint('Error initializing themes: $e');
+          ref.read(loggerProvider).e('Error initializing themes: $e');
         }
 
         // Get current theme
@@ -52,24 +82,12 @@ class MainApp extends ConsumerWidget {
         // Get current theme mode
         final themeMode = ThemeMode.system;
 
-        return theme.when(
-          data: (data) {
-            return MaterialApp.router(
-              title: 'Selene',
-              themeMode: themeMode,
-              theme: data.light(),
-              darkTheme: data.dark(),
-              routerConfig: _appRouter.config(),
-            );
-          },
-          error: (error, stack) {
-            return MaterialApp.router(
-              title: 'Selene',
-              themeMode: themeMode,
-              routerConfig: _appRouter.config(),
-            );
-          },
-          loading: () => const Center(child: CircularProgressIndicator()),
+        return MaterialApp.router(
+          title: 'Selene',
+          themeMode: themeMode,
+          theme: theme.light(),
+          darkTheme: theme.dark(),
+          routerConfig: _appRouter.config(),
         );
       },
     );

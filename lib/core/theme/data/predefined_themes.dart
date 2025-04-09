@@ -1,8 +1,8 @@
 import 'package:selene/core/theme/models/app_theme.dart';
-import 'package:selene/core/theme/repository/system/theme_gaziter.dart';
-import 'package:selene/core/theme/repository/system/theme_system.dart';
+import 'package:selene/core/theme/data/system/theme_gaziter.dart';
+import 'package:selene/core/theme/data/system/theme_system.dart';
 
-Map<String, AppTheme> appThemes = {
+Map<String, AppTheme> predefinedThemes = {
   // System
   themeSystem.id: themeSystem,
   themeGaziter.id: themeGaziter,

@@ -10,12 +10,12 @@
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'package:auto_route/auto_route.dart' as _i7;
-import 'package:selene/features/browse/presentation/browse_tab.dart' as _i1;
-import 'package:selene/features/history/presentation/history_tab.dart' as _i2;
-import 'package:selene/features/library/presentation/library_tab.dart' as _i3;
-import 'package:selene/features/more/presentation/more_tab.dart' as _i5;
-import 'package:selene/features/shell/presentation/main_shell.dart' as _i4;
-import 'package:selene/features/updates/presentation/updates_tab.dart' as _i6;
+import 'package:selene/features/browse/browse_tab.dart' as _i1;
+import 'package:selene/features/history/history_tab.dart' as _i2;
+import 'package:selene/features/library/library_tab.dart' as _i3;
+import 'package:selene/features/more/more_tab.dart' as _i5;
+import 'package:selene/features/shell/main_shell.dart' as _i4;
+import 'package:selene/features/updates/updates_tab.dart' as _i6;
 
 /// generated route for
 /// [_i1.BrowseTab]

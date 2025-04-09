@@ -1,1 +1,7 @@
 include: package:flutter_lints/flutter.yaml
+linter:
+    rules:
+        - sort_pub_dependencies
+analyzer:
+    plugins:
+        - custom_lint

@@ -1,5 +1,5 @@
 import 'package:flex_color_scheme/flex_color_scheme.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Theme;
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:selene/core/utils/converters.dart';
 

@@ -43,3 +43,8 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Don't add generated files to version control
+*.freezed.dart
+*.g.dart
+*.gr.dart

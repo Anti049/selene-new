@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:dartx/dartx.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:selene/core/utils/theming.dart';
 
 const kEmptyFaces = [
@@ -22,7 +23,7 @@ const kEmptyFaces = [
   "(·•᷄‎ࡇ•᷅ )",
 ];
 
-class Empty extends StatefulWidget {
+class Empty extends HookWidget {
   const Empty({
     super.key,
     this.message,
@@ -37,52 +38,40 @@ class Empty extends StatefulWidget {
   final TextStyle? style;
 
   @override
-  State<Empty> createState() => _EmptyState();
-}
-
-class _EmptyState extends State<Empty> {
-  late final int _errorIndex;
-
-  @override
-  void initState() {
-    _errorIndex = Random().nextInt(kEmptyFaces.length);
-
-    super.initState();
-  }
-
-  @override
   Widget build(BuildContext context) {
+    int errorIndex = useState(Random().nextInt(kEmptyFaces.length)).value;
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Text(
-            kEmptyFaces[_errorIndex],
+            kEmptyFaces[errorIndex],
             style:
-                widget.style ??
+                style ??
                 context.text.displayMedium?.copyWith(
                   color: context.scheme.secondary,
                 ),
           ),
-          if (widget.message.isNotNullOrBlank)
+          if (message.isNotNullOrBlank)
             Baseline(
               baseline: 24.0,
               baselineType: TextBaseline.alphabetic,
               child: Text(
-                widget.message ?? '', // Fallback to empty string if null
+                message ?? '', // Fallback to empty string if null
                 style: context.text.titleLarge?.copyWith(
                   color: context.scheme.secondary,
                 ),
                 textAlign: TextAlign.center,
               ),
             ),
-          if (widget.subtitle.isNotNullOrBlank)
+          if (subtitle.isNotNullOrBlank)
             Baseline(
               baseline: 24.0,
               baselineType: TextBaseline.alphabetic,
               child: Text(
-                widget.subtitle ?? '',
+                subtitle ?? '',
                 style: context.text.titleMedium?.copyWith(
                   color: context.scheme.secondary,
                   fontWeight: FontWeight.normal,
@@ -90,12 +79,12 @@ class _EmptyState extends State<Empty> {
                 textAlign: TextAlign.center,
               ),
             ),
-          if (widget.actions?.isNotEmpty ?? false)
+          if (actions?.isNotEmpty ?? false)
             Padding(
               padding: const EdgeInsets.only(top: 24.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: widget.actions ?? [],
+                children: actions ?? [],
               ),
             ),
         ],
