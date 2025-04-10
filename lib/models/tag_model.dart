@@ -1,5 +1,4 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:selene/core/database/database.dart';
 import 'package:selene/models/work_model.dart';
 
 part 'tag_model.freezed.dart';
@@ -28,15 +27,4 @@ abstract class TagModel with _$TagModel {
 
   factory TagModel.fromJson(Map<String, dynamic> json) =>
       _$TagModelFromJson(json);
-
-  factory TagModel.fromData(Tag data) {
-    return TagModel(
-      id: data.id,
-      sourceURL: data.sourceURL,
-      label: data.label,
-      type: data.type,
-      worksWithTag: [],
-      relatedTags: [],
-    );
-  }
 }

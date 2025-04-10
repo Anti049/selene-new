@@ -1,6 +1,7 @@
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/material.dart' hide Theme;
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:selene/core/database/tables/app_themes_table.dart';
 import 'package:selene/core/utils/converters.dart';
 
 part 'app_theme.freezed.dart';
@@ -40,6 +41,22 @@ abstract class AppTheme with _$AppTheme {
 
   factory AppTheme.fromJson(Map<String, dynamic> json) =>
       _$AppThemeFromJson(json);
+
+  IsarTheme toIsar() {
+    return IsarTheme()
+      ..id = id
+      ..name = name
+      ..category = category
+      ..primary = primary.hex
+      ..secondary = secondary?.hex
+      ..tertiary = tertiary?.hex
+      ..error = error?.hex
+      ..neutral = neutral?.hex
+      ..neutralVariant = neutralVariant?.hex
+      ..variant = variant
+      ..isPrebuilt = isPrebuilt
+      ..isEditable = isEditable;
+  }
 
   ColorScheme getColorScheme({
     required Brightness brightness,

@@ -1,4 +1,3 @@
-// dart format width=80
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
 // **************************************************************************
@@ -21,7 +20,10 @@ import 'package:selene/features/updates/updates_tab.dart' as _i6;
 /// [_i1.BrowseTab]
 class BrowseRoute extends _i7.PageRouteInfo<void> {
   const BrowseRoute({List<_i7.PageRouteInfo>? children})
-    : super(BrowseRoute.name, initialChildren: children);
+      : super(
+          BrowseRoute.name,
+          initialChildren: children,
+        );
 
   static const String name = 'BrowseRoute';
 
@@ -37,7 +39,10 @@ class BrowseRoute extends _i7.PageRouteInfo<void> {
 /// [_i2.HistoryTab]
 class HistoryRoute extends _i7.PageRouteInfo<void> {
   const HistoryRoute({List<_i7.PageRouteInfo>? children})
-    : super(HistoryRoute.name, initialChildren: children);
+      : super(
+          HistoryRoute.name,
+          initialChildren: children,
+        );
 
   static const String name = 'HistoryRoute';
 
@@ -53,7 +58,10 @@ class HistoryRoute extends _i7.PageRouteInfo<void> {
 /// [_i3.LibraryTab]
 class LibraryRoute extends _i7.PageRouteInfo<void> {
   const LibraryRoute({List<_i7.PageRouteInfo>? children})
-    : super(LibraryRoute.name, initialChildren: children);
+      : super(
+          LibraryRoute.name,
+          initialChildren: children,
+        );
 
   static const String name = 'LibraryRoute';
 
@@ -69,7 +77,10 @@ class LibraryRoute extends _i7.PageRouteInfo<void> {
 /// [_i4.MainScreen]
 class MainRoute extends _i7.PageRouteInfo<void> {
   const MainRoute({List<_i7.PageRouteInfo>? children})
-    : super(MainRoute.name, initialChildren: children);
+      : super(
+          MainRoute.name,
+          initialChildren: children,
+        );
 
   static const String name = 'MainRoute';
 
@@ -85,7 +96,10 @@ class MainRoute extends _i7.PageRouteInfo<void> {
 /// [_i5.MoreTab]
 class MoreRoute extends _i7.PageRouteInfo<void> {
   const MoreRoute({List<_i7.PageRouteInfo>? children})
-    : super(MoreRoute.name, initialChildren: children);
+      : super(
+          MoreRoute.name,
+          initialChildren: children,
+        );
 
   static const String name = 'MoreRoute';
 
@@ -101,7 +115,10 @@ class MoreRoute extends _i7.PageRouteInfo<void> {
 /// [_i6.UpdatesTab]
 class UpdatesRoute extends _i7.PageRouteInfo<void> {
   const UpdatesRoute({List<_i7.PageRouteInfo>? children})
-    : super(UpdatesRoute.name, initialChildren: children);
+      : super(
+          UpdatesRoute.name,
+          initialChildren: children,
+        );
 
   static const String name = 'UpdatesRoute';
 

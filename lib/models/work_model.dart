@@ -1,5 +1,4 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:selene/core/database/database.dart';
 import 'package:selene/models/author_model.dart';
 import 'package:selene/models/chapter_model.dart';
 import 'package:selene/models/tag_model.dart';
@@ -36,18 +35,4 @@ abstract class WorkModel with _$WorkModel {
 
   factory WorkModel.fromJson(Map<String, dynamic> json) =>
       _$WorkModelFromJson(json);
-
-  factory WorkModel.fromData(Work data) {
-    return WorkModel(
-      id: data.id,
-      sourceURL: data.sourceURL,
-      title: data.title,
-      authors: [],
-      summary: data.summary,
-      status: data.status,
-      wordCount: data.wordCount,
-      chapters: [],
-      tags: [],
-    );
-  }
 }

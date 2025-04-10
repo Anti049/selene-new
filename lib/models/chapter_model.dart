@@ -1,5 +1,4 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:selene/core/database/database.dart';
 
 part 'chapter_model.freezed.dart';
 part 'chapter_model.g.dart';
@@ -19,17 +18,4 @@ abstract class ChapterModel with _$ChapterModel {
 
   factory ChapterModel.fromJson(Map<String, dynamic> json) =>
       _$ChapterModelFromJson(json);
-
-  factory ChapterModel.fromData(Chapter data) {
-    return ChapterModel(
-      id: data.id,
-      sourceURL: data.sourceURL,
-      workID: data.workID,
-      title: data.title,
-      content: data.content,
-      datePublished: DateTime.parse(data.datePublished),
-      wordCount: data.wordCount,
-      chapterNumber: data.chapterNumber,
-    );
-  }
 }

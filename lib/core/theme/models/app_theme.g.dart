@@ -6,69 +6,50 @@ part of 'app_theme.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_AppTheme _$AppThemeFromJson(Map<String, dynamic> json) => _AppTheme(
-  id: json['id'] as String,
-  name: json['name'] as String,
-  category:
-      $enumDecodeNullable(_$ThemeCategoryEnumMap, json['category']) ??
-      ThemeCategory.custom,
-  primary: const ColorConverter().fromJson(json['primary'] as String),
-  secondary: _$JsonConverterFromJson<String, Color>(
-    json['secondary'],
-    const ColorConverter().fromJson,
-  ),
-  tertiary: _$JsonConverterFromJson<String, Color>(
-    json['tertiary'],
-    const ColorConverter().fromJson,
-  ),
-  error: _$JsonConverterFromJson<String, Color>(
-    json['error'],
-    const ColorConverter().fromJson,
-  ),
-  neutral: _$JsonConverterFromJson<String, Color>(
-    json['neutral'],
-    const ColorConverter().fromJson,
-  ),
-  neutralVariant: _$JsonConverterFromJson<String, Color>(
-    json['neutralVariant'],
-    const ColorConverter().fromJson,
-  ),
-  variant:
-      $enumDecodeNullable(_$FlexSchemeVariantEnumMap, json['variant']) ??
-      FlexSchemeVariant.tonalSpot,
-  isPrebuilt: json['isPrebuilt'] as bool? ?? false,
-  isEditable: json['isEditable'] as bool? ?? true,
-);
+_$AppThemeImpl _$$AppThemeImplFromJson(Map<String, dynamic> json) =>
+    _$AppThemeImpl(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      category: $enumDecodeNullable(_$ThemeCategoryEnumMap, json['category']) ??
+          ThemeCategory.custom,
+      primary: const ColorConverter().fromJson(json['primary'] as String),
+      secondary: _$JsonConverterFromJson<String, Color>(
+          json['secondary'], const ColorConverter().fromJson),
+      tertiary: _$JsonConverterFromJson<String, Color>(
+          json['tertiary'], const ColorConverter().fromJson),
+      error: _$JsonConverterFromJson<String, Color>(
+          json['error'], const ColorConverter().fromJson),
+      neutral: _$JsonConverterFromJson<String, Color>(
+          json['neutral'], const ColorConverter().fromJson),
+      neutralVariant: _$JsonConverterFromJson<String, Color>(
+          json['neutralVariant'], const ColorConverter().fromJson),
+      variant:
+          $enumDecodeNullable(_$FlexSchemeVariantEnumMap, json['variant']) ??
+              FlexSchemeVariant.tonalSpot,
+      isPrebuilt: json['isPrebuilt'] as bool? ?? false,
+      isEditable: json['isEditable'] as bool? ?? true,
+    );
 
-Map<String, dynamic> _$AppThemeToJson(_AppTheme instance) => <String, dynamic>{
-  'id': instance.id,
-  'name': instance.name,
-  'category': _$ThemeCategoryEnumMap[instance.category]!,
-  'primary': const ColorConverter().toJson(instance.primary),
-  'secondary': _$JsonConverterToJson<String, Color>(
-    instance.secondary,
-    const ColorConverter().toJson,
-  ),
-  'tertiary': _$JsonConverterToJson<String, Color>(
-    instance.tertiary,
-    const ColorConverter().toJson,
-  ),
-  'error': _$JsonConverterToJson<String, Color>(
-    instance.error,
-    const ColorConverter().toJson,
-  ),
-  'neutral': _$JsonConverterToJson<String, Color>(
-    instance.neutral,
-    const ColorConverter().toJson,
-  ),
-  'neutralVariant': _$JsonConverterToJson<String, Color>(
-    instance.neutralVariant,
-    const ColorConverter().toJson,
-  ),
-  'variant': _$FlexSchemeVariantEnumMap[instance.variant]!,
-  'isPrebuilt': instance.isPrebuilt,
-  'isEditable': instance.isEditable,
-};
+Map<String, dynamic> _$$AppThemeImplToJson(_$AppThemeImpl instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'name': instance.name,
+      'category': _$ThemeCategoryEnumMap[instance.category]!,
+      'primary': const ColorConverter().toJson(instance.primary),
+      'secondary': _$JsonConverterToJson<String, Color>(
+          instance.secondary, const ColorConverter().toJson),
+      'tertiary': _$JsonConverterToJson<String, Color>(
+          instance.tertiary, const ColorConverter().toJson),
+      'error': _$JsonConverterToJson<String, Color>(
+          instance.error, const ColorConverter().toJson),
+      'neutral': _$JsonConverterToJson<String, Color>(
+          instance.neutral, const ColorConverter().toJson),
+      'neutralVariant': _$JsonConverterToJson<String, Color>(
+          instance.neutralVariant, const ColorConverter().toJson),
+      'variant': _$FlexSchemeVariantEnumMap[instance.variant]!,
+      'isPrebuilt': instance.isPrebuilt,
+      'isEditable': instance.isEditable,
+    };
 
 const _$ThemeCategoryEnumMap = {
   ThemeCategory.system: 'system',
@@ -82,7 +63,8 @@ const _$ThemeCategoryEnumMap = {
 Value? _$JsonConverterFromJson<Json, Value>(
   Object? json,
   Value? Function(Json json) fromJson,
-) => json == null ? null : fromJson(json as Json);
+) =>
+    json == null ? null : fromJson(json as Json);
 
 const _$FlexSchemeVariantEnumMap = {
   FlexSchemeVariant.tonalSpot: 'tonalSpot',
@@ -111,4 +93,5 @@ const _$FlexSchemeVariantEnumMap = {
 Json? _$JsonConverterToJson<Json, Value>(
   Value? value,
   Json? Function(Value value) toJson,
-) => value == null ? null : toJson(value);
+) =>
+    value == null ? null : toJson(value);
