@@ -4,7 +4,12 @@ import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:selene/core/database/tables/app_themes_table.dart';
+import 'package:selene/core/database/tables/authors_table.dart';
+import 'package:selene/core/database/tables/chapters_table.dart';
 import 'package:selene/core/database/tables/preferences_table.dart';
+import 'package:selene/core/database/tables/series_table.dart';
+import 'package:selene/core/database/tables/tags_table.dart';
+import 'package:selene/core/database/tables/works_table.dart';
 
 part 'isar_provider.g.dart';
 
@@ -29,6 +34,12 @@ Future<Isar> isar(Ref ref) async {
     [
       PreferencesSchema,
       IsarThemeSchema,
+      // Library schemas
+      WorkSchema,
+      AuthorSchema,
+      SeriesSchema,
+      TagSchema,
+      ChapterSchema,
       // Add other schemas here as your app grows
     ],
     directory: dir.path,

@@ -49,10 +49,7 @@ class MainApp extends ConsumerWidget {
 
     return isarAsyncValue.when(
       data: (isar) {
-        // Isar is ready, build the main app UI
-        // You might not need 'isar' directly here if other providers use it.
-
-        // Get providers that depend on Isar (they will now work)
+        // Get providers
         final themeRepository = ref.watch(themeRepositoryProvider);
         final appearancePrefs = ref.watch(appearancePreferencesProvider);
 

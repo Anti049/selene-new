@@ -171,6 +171,8 @@ abstract class AppTheme with _$AppTheme {
         elevatedButtonRadius: 8.0,
         outlinedButtonRadius: 8.0,
         dialogRadius: 8.0,
+        fabRadius: 8.0,
+        fabUseShape: true,
       ),
       useMaterial3ErrorColors: true,
       visualDensity: FlexColorScheme.comfortablePlatformDensity,

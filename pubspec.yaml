@@ -58,6 +58,14 @@ dev_dependencies:
 
 flutter:
     uses-material-design: true
+    generate: true
+    assets:
+        - assets/
+        - assets/fonts/
+        - assets/icons/
+        - assets/images/
+        - assets/launcher/
+        - assets/splash/
 
 package_rename_config:
     android:
