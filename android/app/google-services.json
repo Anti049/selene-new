@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "66410332306",
+    "project_id": "selene-049",
+    "storage_bucket": "selene-049.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:66410332306:android:255f1f62b8c6aebc10664b",
+        "android_client_info": {
+          "package_name": "com.example.selene"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCgJ1G2izjBnDPhKWtGJhjGHcyJgB0IM-s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:66410332306:android:fe26c5d89fc1554410664b",
+        "android_client_info": {
+          "package_name": "dev.nploetz.selene"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCgJ1G2izjBnDPhKWtGJhjGHcyJgB0IM-s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
