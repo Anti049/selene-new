@@ -163,7 +163,8 @@ abstract class AppTheme with _$AppTheme {
         menuPadding: EdgeInsets.all(0.0),
         menuSchemeColor: SchemeColor.surfaceContainerHigh,
         inputDecoratorRadius: 24.0,
-        chipRadius: 24.0,
+        // Chips
+        chipRadius: 8.0,
         dialogBackgroundSchemeColor: SchemeColor.surface,
         checkboxSchemeColor: SchemeColor.onSurface,
         textButtonRadius: 8.0,
@@ -173,6 +174,8 @@ abstract class AppTheme with _$AppTheme {
         dialogRadius: 8.0,
         fabRadius: 8.0,
         fabUseShape: true,
+        snackBarBackgroundSchemeColor: SchemeColor.inverseSurface,
+        snackBarActionSchemeColor: SchemeColor.inversePrimary,
       ),
       useMaterial3ErrorColors: true,
       visualDensity: FlexColorScheme.comfortablePlatformDensity,

@@ -5,4 +5,10 @@ extension ThemeDataExtensions on BuildContext {
   ColorScheme get scheme => theme.colorScheme;
   TextTheme get text => theme.textTheme;
   Brightness get brightness => theme.brightness;
+  MediaQueryData get mediaQuery => MediaQuery.of(this);
+}
+
+extension BrightnessExtensions on Brightness {
+  Brightness get inverted =>
+      this == Brightness.light ? Brightness.dark : Brightness.light;
 }

@@ -1,10 +1,13 @@
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:isar/isar.dart';
 import 'package:selene/core/database/providers/isar_provider.dart';
 import 'package:selene/core/logging/logger_provider.dart';
 import 'package:selene/core/theme/providers/theme_repository_provider.dart';
+import 'package:selene/features/banners/presentation/widgets/banners_container.dart';
 import 'package:selene/features/settings/screens/appearance/providers/appearance_preferences.dart';
 import 'package:selene/routing/router.dart';
 import 'package:system_theme/system_theme.dart';
@@ -14,6 +17,9 @@ late Isar isarInstance;
 void main() async {
   // Ensure plugin services are initialized
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Enable edge-to-edge
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
   // Initialize system theme
   await SystemTheme.accentColor.load();
@@ -35,6 +41,18 @@ void main() async {
 
   // Run the app
   runApp(UncontrolledProviderScope(container: container, child: MainApp()));
+}
+
+// Function to check if a route is considered fullscreen
+// Moved here to be accessible within the builder
+bool _isFullScreen(RouteMatch? route) {
+  if (route == null) return false;
+  // Add your fullscreen route names here (e.g., ReaderRoute)
+  const fullScreenRoutes = {
+    // 'ReaderRoute', // Example: Add your reader route name if you have one
+    'ReaderRoute',
+  };
+  return fullScreenRoutes.contains(route.name);
 }
 
 class MainApp extends ConsumerWidget {
@@ -65,16 +83,27 @@ class MainApp extends ConsumerWidget {
 
             // Get current theme mode
             final themeMode = appearancePrefs.themeMode.value;
+            final lightTheme =
+                activeTheme?.light() ?? ThemeData.light(useMaterial3: true);
+            final darkTheme =
+                activeTheme?.dark() ?? ThemeData.dark(useMaterial3: true);
 
             return MaterialApp.router(
               title: 'Selene',
               themeMode: themeMode,
-              theme:
-                  activeTheme?.light() ?? ThemeData.light(useMaterial3: true),
-              darkTheme:
-                  activeTheme?.dark() ?? ThemeData.dark(useMaterial3: true),
+              theme: lightTheme,
+              darkTheme: darkTheme,
               debugShowCheckedModeBanner: kDebugMode,
               routerConfig: _appRouter.config(),
+              builder: (context, child) {
+                if (child == null) return const SizedBox.shrink();
+
+                final delegate = _appRouter.delegate();
+                final topMatch = delegate.currentConfiguration?.topMatch;
+                final showBanners = !_isFullScreen(topMatch);
+
+                return showBanners ? BannersContainer(child: child) : child;
+              },
             );
           },
         );

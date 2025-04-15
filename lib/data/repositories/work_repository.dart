@@ -23,6 +23,14 @@ class WorkRepository {
   WorkRepository(this._isar);
 
   // --- Read Operations ---
+  /// Watch all raw [Works] from the [_isar] database
+  ///
+  /// Returns a stream of [WorkModel]
+  Stream<List<Work>> watchAllWorksRaw() {
+    // Watch all works from the database
+    return _isar.works.where().watch(fireImmediately: true);
+  }
+
   /// Watch all [Works] from the [_isar] database
   ///
   /// Returns a stream of [WorkModel]

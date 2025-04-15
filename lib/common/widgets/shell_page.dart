@@ -10,7 +10,8 @@ abstract class ShellPage with _$ShellPage {
   const factory ShellPage({
     required String label,
     required PageRouteInfo route,
-    required IconData icon,
+    IconData? icon,
+    List<Widget>? actions,
   }) = _ShellPage;
 
   Icon get unselectedIcon => Icon(icon, fill: 0.0);
@@ -34,4 +35,6 @@ abstract class ShellPage with _$ShellPage {
         selectedIcon: selectedIcon,
         label: Text(label),
       );
+
+  Tab get tabDestination => Tab(text: label);
 }

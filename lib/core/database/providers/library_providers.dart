@@ -6,8 +6,9 @@ import 'package:selene/data/repositories/work_repository.dart';
 part 'library_providers.g.dart';
 
 @riverpod
-WorkRepository workRepository(Ref ref) {
-  return WorkRepository(ref.read(isarProvider).value!);
+WorkRepository worksRepository(Ref ref) {
+  final isar = ref.watch(isarProvider).requireValue;
+  return WorkRepository(isar);
 }
 
 // @riverpod

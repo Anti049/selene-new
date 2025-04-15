@@ -14,12 +14,31 @@ class AppRouter extends RootStackRouter {
       path: '/',
       page: MainRoute.page,
       children: [
-        AutoRoute(path: 'library', page: LibraryRoute.page, children: []),
+        AutoRoute(
+          path: 'library',
+          page: LibraryRoute.page,
+          children: [
+            AutoRoute(path: 'filter', page: FilterOptionsRoute.page),
+            AutoRoute(path: 'sort', page: SortOptionsRoute.page),
+            AutoRoute(path: 'display', page: DisplayOptionsRoute.page),
+            AutoRoute(path: 'tag', page: TagOptionsRoute.page),
+          ],
+        ),
         AutoRoute(path: 'updates', page: UpdatesRoute.page),
         AutoRoute(path: 'history', page: HistoryRoute.page),
-        AutoRoute(path: 'browse', page: BrowseRoute.page, children: []),
+        AutoRoute(
+          path: 'browse',
+          page: BrowseRoute.page,
+          children: [
+            AutoRoute(path: 'sources', page: SourcesRoute.page),
+            AutoRoute(path: 'extensions', page: ExtensionsRoute.page),
+            AutoRoute(path: 'migrate', page: MigrateRoute.page),
+          ],
+        ),
         AutoRoute(path: 'more', page: MoreRoute.page),
       ],
     ),
+    AutoRoute(path: '/settings', page: SettingsRoute.page),
+    AutoRoute(path: '/settings/appearance', page: AppearanceRoute.page),
   ];
 }

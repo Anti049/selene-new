@@ -1,8 +1,8 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
+import 'package:selene/common/widgets/shell_page.dart';
 import 'package:selene/core/utils/theming.dart';
-import 'package:selene/features/shell/models/shell_page.dart';
 import 'package:selene/routing/router.gr.dart';
 
 @RoutePage()
@@ -31,19 +31,15 @@ class MainScreen extends StatelessWidget {
       routes: navigationItems.map((item) => item.route).toList(),
       builder: (context, child) {
         final router = AutoTabsRouter.of(context);
-
-        return Scaffold(
-          body: child,
-          bottomNavigationBar: NavigationBar(
-            backgroundColor:
-                context.theme.bottomNavigationBarTheme.backgroundColor,
-            selectedIndex: router.activeIndex,
-            onDestinationSelected: router.setActiveIndex,
-            destinations: [
-              ...navigationItems.map((item) => item.barDestination),
-            ],
-          ),
+        final navigationBar = NavigationBar(
+          backgroundColor:
+              context.theme.bottomNavigationBarTheme.backgroundColor,
+          selectedIndex: router.activeIndex,
+          onDestinationSelected: router.setActiveIndex,
+          destinations: [...navigationItems.map((item) => item.barDestination)],
         );
+
+        return Scaffold(body: child, bottomNavigationBar: navigationBar);
       },
     );
   }
