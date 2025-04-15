@@ -80,7 +80,6 @@ class _LibraryTabState extends ConsumerState<LibraryTab>
                 ),
                 onChanged: (value) {
                   libraryNotifier.updateSearchQuery(value);
-                  libraryNotifier.refresh();
                 },
               )
               : isSelectionActive

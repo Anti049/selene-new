@@ -17,22 +17,18 @@ import 'package:stream_transform/stream_transform.dart' hide Concatenate;
 
 part 'library_state_provider.g.dart';
 
-@riverpod
+@Riverpod(keepAlive: true)
 class LibraryState extends _$LibraryState {
-  final _searchQueryController = BehaviorSubject<String?>.seeded(null);
-
   @override
   Stream<LibraryStateModel> build() {
     // Get providers
     final libraryPrefs = ref.watch(libraryPreferencesProvider);
-    final logger = ref.read(loggerProvider); // Get logger
-
-    ref.onDispose(() => _searchQueryController.close());
+    final logger = ref.read(loggerProvider);
 
     return Rx.combineLatest3(
       _libraryItemsStream(),
       _preferencesStream(),
-      _searchQueryController.stream.distinct().debounce(
+      _searchQueryStream().distinct().debounce(
         const Duration(milliseconds: 300),
       ),
       (libraryItems, preferences, searchQuery) {
@@ -110,8 +106,7 @@ class LibraryState extends _$LibraryState {
       // Or return a default state:
       return LibraryStateModel(
         items: [],
-        searchQuery:
-            _searchQueryController.valueOrNull, // Keep search query if possible
+        searchQuery: null, // Keep search query if possible
         selectedItems: [],
         // Use default preference values or fetch them synchronously if possible
         showCategoryTabs:
@@ -122,9 +117,7 @@ class LibraryState extends _$LibraryState {
                 .read(libraryPreferencesProvider)
                 .showContinueReadingButton
                 .value,
-        hasActiveFilters:
-            ref.read(libraryPreferencesProvider).anyOptionsActive ||
-            (_searchQueryController.valueOrNull?.isNotEmpty ?? false),
+        hasActiveFilters: ref.read(libraryPreferencesProvider).anyOptionsActive,
       );
     });
   }
@@ -147,108 +140,116 @@ class LibraryState extends _$LibraryState {
     }
 
     // Watch the works from the repository
-    return worksRepository
-        .watchAllWorksRaw()
-        .asyncMap((worksTable) async {
-          // Map DB objects to WorkModel
-          List<WorkModel> workModels = [];
-          try {
-            // Use a read transaction for consistency during mapping
-            workModels = await isar.txn(() async {
-              return await Future.wait(
-                worksTable.map(WorkMapper.mapToModel).toList(),
-              );
-            });
-            // Alternative without explicit txn (if mapToModel is self-contained)
-            // workModels = await Future.wait(worksTable.map(WorkMapper.mapToModel).toList());
-          } catch (e, stack) {
-            logger.e(
-              "Error mapping WorksTable to WorkModel in stream: $e",
-              stackTrace: stack,
-            );
-            return <LibraryItem>[]; // Return empty list on error
-          }
-
-          // --- Sorting Logic (on List<WorkModel>) ---
-          final sortBy = libraryPrefs.sortBy.value;
-          final sortOrder = libraryPrefs.sortOrder.value;
-          final mutableWorks = List<WorkModel>.from(workModels);
-          // (Sorting logic remains the same as your previous version)
-          mutableWorks.sort((a, b) {
-            switch (sortBy) {
-              case SortBy.alphabetically:
-                return a.title.compareTo(b.title);
-              case SortBy.author:
-                final authorsA = a.authors.map((e) => e.name).toList()..sort();
-                final authorsB = b.authors.map((e) => e.name).toList()..sort();
-                return authorsA.join(', ').compareTo(authorsB.join(', '));
-              case SortBy.totalChapters:
-                return a.chapters.length.compareTo(b.chapters.length);
-              case SortBy.datePublished: // Typo fixed
-                if (a.datePublished == null && b.datePublished == null) {
-                  return 0;
-                }
-                if (a.datePublished == null) return 1; // Nulls last
-                if (b.datePublished == null) return -1;
-                return a.datePublished!.compareTo(b.datePublished!);
-              case SortBy.lastUpdated:
-                if (a.dateUpdated == null && b.dateUpdated == null) return 0;
-                if (a.dateUpdated == null) return 1; // Nulls last
-                if (b.dateUpdated == null) return -1;
-                return a.dateUpdated!.compareTo(b.dateUpdated!);
-              case SortBy.latestChapter:
-                final lastChapterA =
-                    a.chapters.isNotEmpty
-                        ? a.chapters.last.datePublished
-                        : null;
-                final lastChapterB =
-                    b.chapters.isNotEmpty
-                        ? b.chapters.last.datePublished
-                        : null;
-                if (lastChapterA == null && lastChapterB == null) return 0;
-                if (lastChapterA == null) return 1; // Nulls last
-                if (lastChapterB == null) return -1;
-                return lastChapterA.compareTo(lastChapterB);
-              default:
-                return 0;
-            }
-          });
-          List<WorkModel> sortedWorks = mutableWorks;
-          if (sortOrder == SortOrder.descending) {
-            sortedWorks = sortedWorks.reversed.toList();
-          }
-          // --- End Sorting Logic ---
-
-          // --- Mapping Logic (WorkModel -> LibraryItem) ---
-          return sortedWorks
-              .map((work) {
-                final itemId = work.id;
-                if (itemId == null) {
-                  // This should ideally not happen after successful mapping
-                  logger.e(
-                    "Error: Mapped WorkModel has null ID: ${work.title}",
-                  );
-                  return null;
-                }
-                return LibraryItem(
-                  itemID: itemId,
-                  work: work, // work is now a fully mapped WorkModel
-                  // TODO: Populate downloadCount, unreadCount etc. if needed
-                  // These might require additional logic or data sources
+    try {
+      return worksRepository
+          .watchAllWorksRaw()
+          .asyncMap((worksTable) async {
+            // Map DB objects to WorkModel
+            List<WorkModel> workModels = [];
+            try {
+              // Use a read transaction for consistency during mapping
+              workModels = await isar.txn(() async {
+                return await Future.wait(
+                  worksTable.map(WorkMapper.mapToModel).toList(),
                 );
-              })
-              .whereType<LibraryItem>()
-              .toList(); // Filter out potential nulls
-          // --- End Mapping Logic ---
-        })
-        .handleError((error, stackTrace) {
-          logger.e(
-            "Error in _libraryItemsStream asyncMap: $error",
-            stackTrace: stackTrace,
-          );
-          // Emit an empty list or rethrow, depending on desired error handling
-          return <LibraryItem>[];
-        });
+              });
+              // Alternative without explicit txn (if mapToModel is self-contained)
+              // workModels = await Future.wait(worksTable.map(WorkMapper.mapToModel).toList());
+            } catch (e, stack) {
+              logger.e(
+                "Error mapping WorksTable to WorkModel in stream: $e",
+                stackTrace: stack,
+              );
+              return <LibraryItem>[]; // Return empty list on error
+            }
+
+            // --- Sorting Logic (on List<WorkModel>) ---
+            final sortBy = libraryPrefs.sortBy.value;
+            final sortOrder = libraryPrefs.sortOrder.value;
+            final mutableWorks = List<WorkModel>.from(workModels);
+            // (Sorting logic remains the same as your previous version)
+            mutableWorks.sort((a, b) {
+              switch (sortBy) {
+                case SortBy.alphabetically:
+                  return a.title.compareTo(b.title);
+                case SortBy.author:
+                  final authorsA =
+                      a.authors.map((e) => e.name).toList()..sort();
+                  final authorsB =
+                      b.authors.map((e) => e.name).toList()..sort();
+                  return authorsA.join(', ').compareTo(authorsB.join(', '));
+                case SortBy.totalChapters:
+                  return a.chapters.length.compareTo(b.chapters.length);
+                case SortBy.datePublished: // Typo fixed
+                  if (a.datePublished == null && b.datePublished == null) {
+                    return 0;
+                  }
+                  if (a.datePublished == null) return 1; // Nulls last
+                  if (b.datePublished == null) return -1;
+                  return a.datePublished!.compareTo(b.datePublished!);
+                case SortBy.lastUpdated:
+                  if (a.dateUpdated == null && b.dateUpdated == null) return 0;
+                  if (a.dateUpdated == null) return 1; // Nulls last
+                  if (b.dateUpdated == null) return -1;
+                  return a.dateUpdated!.compareTo(b.dateUpdated!);
+                case SortBy.latestChapter:
+                  final lastChapterA =
+                      a.chapters.isNotEmpty
+                          ? a.chapters.last.datePublished
+                          : null;
+                  final lastChapterB =
+                      b.chapters.isNotEmpty
+                          ? b.chapters.last.datePublished
+                          : null;
+                  if (lastChapterA == null && lastChapterB == null) return 0;
+                  if (lastChapterA == null) return 1; // Nulls last
+                  if (lastChapterB == null) return -1;
+                  return lastChapterA.compareTo(lastChapterB);
+                default:
+                  return 0;
+              }
+            });
+            List<WorkModel> sortedWorks = mutableWorks;
+            if (sortOrder == SortOrder.descending) {
+              sortedWorks = sortedWorks.reversed.toList();
+            }
+            // --- End Sorting Logic ---
+
+            // --- Mapping Logic (WorkModel -> LibraryItem) ---
+            return sortedWorks
+                .map((work) {
+                  final itemId = work.id;
+                  if (itemId == null) {
+                    // This should ideally not happen after successful mapping
+                    logger.e(
+                      "Error: Mapped WorkModel has null ID: ${work.title}",
+                    );
+                    return null;
+                  }
+                  return LibraryItem(
+                    itemID: itemId,
+                    work: work, // work is now a fully mapped WorkModel
+                    // TODO: Populate downloadCount, unreadCount etc. if needed
+                    // These might require additional logic or data sources
+                  );
+                })
+                .whereType<LibraryItem>()
+                .toList(); // Filter out potential nulls
+            // --- End Mapping Logic ---
+          })
+          .handleError((error, stackTrace) {
+            logger.e(
+              "Error in _libraryItemsStream asyncMap: $error",
+              stackTrace: stackTrace,
+            );
+            // Emit an empty list or rethrow, depending on desired error handling
+            return <LibraryItem>[];
+          });
+    } catch (e, stack) {
+      logger.e("Error in _libraryItemsStream: $e", stackTrace: stack);
+      // Handle error (e.g., return an empty stream or rethrow)
+      return Stream.value([]); // Return empty list on error
+    }
   }
 
   // Get preferences stream
@@ -323,6 +324,7 @@ class LibraryState extends _$LibraryState {
       final newState = updater(currentState);
       // Update the state with the new model wrapped in AsyncData
       state = AsyncData(newState);
+      refresh(); // Refresh the state to trigger UI updates
     } else if (state is AsyncError) {
       // Optionally handle updates even if the last state was an error
       // Might need to create a new LibraryStateModel from scratch or defaults
@@ -341,19 +343,23 @@ class LibraryState extends _$LibraryState {
   }
 
   // --- Search Utilities ---
+  Stream<String?> _searchQueryStream() async* {
+    yield state.valueOrNull?.searchQuery;
+  }
+
   // Start searching
-  void startSearching() async {
-    _searchQueryController.add('');
+  void startSearching() {
+    _updateState((state) => state.copyWith(searchQuery: ''));
   }
 
   // Stop searching
-  void stopSearching() async {
-    _searchQueryController.add(null);
+  void stopSearching() {
+    _updateState((state) => state.copyWith(searchQuery: null));
   }
 
   // Update search query
-  void updateSearchQuery(String query) async {
-    _searchQueryController.add(query);
+  void updateSearchQuery(String query) {
+    _updateState((state) => state.copyWith(searchQuery: query));
   }
 
   // --- Selection Utilities ---
