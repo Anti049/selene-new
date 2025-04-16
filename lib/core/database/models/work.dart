@@ -105,4 +105,10 @@ class WorkModel with _$WorkModel {
       chapters: chapters,
     );
   }
+
+  // --- Utilities ---
+  String get authorNames {
+    if (authors.isEmpty) return 'Unknown Author';
+    return authors.map((a) => a.name).join(', ');
+  }
 }

@@ -217,6 +217,16 @@ class WorkRepository {
     return wasWorkDeleted;
   }
 
+  Future<bool> deleteWorksByIds(List<int> ids) async {
+    // Delete multiple works by their IDs
+    bool allDeleted = true;
+    for (final id in ids) {
+      final wasDeleted = await deleteWorkById(id);
+      if (!wasDeleted) allDeleted = false;
+    }
+    return allDeleted;
+  }
+
   // --- Helper Methods ---
   /// Find or create an author in the [_isar] database
   ///

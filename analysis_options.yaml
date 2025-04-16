@@ -3,6 +3,8 @@ linter:
     rules:
         - sort_pub_dependencies
 analyzer:
+    errors:
+        invalid_annotation_target: ignore
     plugins:
         - custom_lint
 

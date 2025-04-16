@@ -4,11 +4,9 @@ part 'library_item_preferences.freezed.dart';
 
 @freezed
 class LibraryItemPreferences with _$LibraryItemPreferences {
+  const LibraryItemPreferences._();
+
   const factory LibraryItemPreferences({
-    required bool showDownloadCount,
-    required bool showUnreadCount,
-    required bool showContinueReadingButton,
-    required bool showFavorite,
     required bool? filterDownloaded,
     required bool? filterUnread,
     required bool? filterFavorite,
@@ -17,4 +15,12 @@ class LibraryItemPreferences with _$LibraryItemPreferences {
     required bool? filterUpdated,
     required bool? downloadedOnlyMode,
   }) = _LibraryItemPreferences;
+
+  bool get hasActiveFilters =>
+      filterDownloaded != null ||
+      filterUnread != null ||
+      filterFavorite != null ||
+      filterStarted != null ||
+      filterCompleted != null ||
+      filterUpdated != null;
 }

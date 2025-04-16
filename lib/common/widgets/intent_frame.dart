@@ -28,18 +28,18 @@ class IntentFrame extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scrollableTypes = [
-      ScrollView,
-      ListView,
-      GridView,
-      CustomScrollView,
-      PageView,
-      Scrollbar,
-    ];
-    final childType = child.runtimeType.toString();
-    final isChildScrollable =
-        child is Scrollable ||
-        scrollableTypes.any((type) => childType.contains(type.toString()));
+    // final scrollableTypes = [
+    //   ScrollView,
+    //   ListView,
+    //   GridView,
+    //   CustomScrollView,
+    //   PageView,
+    //   Scrollbar,
+    // ];
+    // final childType = child.runtimeType.toString();
+    // final isChildScrollable =
+    //     child is Scrollable ||
+    //     scrollableTypes.any((type) => childType.contains(type.toString()));
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -79,18 +79,19 @@ class IntentFrame extends StatelessWidget {
                   minWidth: constraints.maxWidth,
                 ),
                 child:
-                    false // isChildScrollable
+                /*false // isChildScrollable
                         ? child // TODO: Handle scrollable types properly, e.g. ListView, GridView etc.
-                        : SingleChildScrollView(
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          child: ConstrainedBox(
-                            constraints: BoxConstraints(
-                              minHeight: constraints.maxHeight,
-                              minWidth: constraints.maxWidth,
-                            ),
-                            child: child,
-                          ),
-                        ),
+                        : */
+                SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: constraints.maxHeight,
+                      minWidth: constraints.maxWidth,
+                    ),
+                    child: child,
+                  ),
+                ),
               ),
             ),
           ),

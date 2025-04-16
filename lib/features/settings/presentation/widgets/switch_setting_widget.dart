@@ -22,7 +22,7 @@ class SwitchSettingWidget extends StatelessWidget {
       title: Text(setting.label),
       subtitle: setting.subtitle != null ? Text(setting.subtitle!) : null,
       trailing: Switch(
-        value: preference.value,
+        value: preference.get(),
         onChanged: (value) => preference.toggle(),
       ),
       onTap: () => preference.toggle(),

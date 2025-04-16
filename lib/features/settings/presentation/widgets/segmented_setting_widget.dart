@@ -18,7 +18,7 @@ class SegmentedSettingWidget extends StatelessWidget {
 
     // Get possible values
     final possibleValues = setting.options ?? [];
-    final selectedValue = setting.preference!.value;
+    final selectedValue = setting.preference!.get();
 
     return ListTile(
       title: SegmentedButton(
@@ -31,7 +31,7 @@ class SegmentedSettingWidget extends StatelessWidget {
             }).toList(),
         selected: {selectedValue},
         onSelectionChanged: (value) {
-          setting.preference!.setValue(value.first);
+          setting.preference!.set(value.first);
         },
       ),
     );

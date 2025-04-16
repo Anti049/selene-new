@@ -83,7 +83,7 @@ class PaddedAppBar extends ConsumerWidget implements PreferredSizeWidget {
         primary: !isTopBannerVisible,
         backgroundColor: backgroundColor,
         elevation: elevated ? 8.0 : null,
-        scrolledUnderElevation: elevated ? 0.0 : null,
+        scrolledUnderElevation: elevated ? 8.0 : 4.0,
         title:
             subtitle != null
                 ? Column(

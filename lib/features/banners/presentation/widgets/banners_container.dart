@@ -15,8 +15,8 @@ class BannersContainer extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final prefs = ref.watch(morePreferencesProvider);
-    final isDownloadedVisible = prefs.downloadedOnlyMode.value;
-    final isIncognitoVisible = prefs.incognitoMode.value;
+    final isDownloadedVisible = prefs.downloadedOnlyMode.get();
+    final isIncognitoVisible = prefs.incognitoMode.get();
     final isAnyBannerVisible = isDownloadedVisible || isIncognitoVisible;
 
     // Determine topmost status

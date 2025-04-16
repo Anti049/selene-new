@@ -20,36 +20,35 @@ class Preference<T> {
   // --- Read Operations ---
   Preferences get prefs =>
       _isar.preferences.getSync(kPreferencesID) ?? Preferences();
-  T get value => _getter(prefs) ?? defaultValue;
+  T get() => _getter(prefs) ?? defaultValue;
   Stream<T> get stream => _isar.preferences
       .watchObject(kPreferencesID)
       .map((preferences) => _getter(preferences ?? prefs) ?? defaultValue);
 
   // --- Write Operations ---
-  void setValue(T value) {
+  T set(T value) {
     final prefs = this.prefs;
     _isar.writeTxnSync(() {
       _isar.preferences.putSync(_setter(prefs, value));
     });
+    return value;
   }
 
   void reset() {
-    setValue(defaultValue);
+    set(defaultValue);
   }
 }
 
 extension BoolExtensions on Preference<bool> {
   bool toggle() {
-    setValue(!value);
-    return value;
+    return set(!get());
   }
 }
 
 extension EnumExtensions on Preference<Enum> {
   Enum cycle(List<Enum> values) {
-    final currentIndex = values.indexOf(value);
+    final currentIndex = values.indexOf(get());
     final nextIndex = (currentIndex + 1) % values.length;
-    setValue(values[nextIndex]);
-    return values[nextIndex];
+    return set(values[nextIndex]);
   }
 }

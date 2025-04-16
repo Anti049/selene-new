@@ -12,9 +12,6 @@ class LibraryStateModel with _$LibraryStateModel {
     @Default([]) List<LibraryItem> items,
     String? searchQuery,
     @Default([]) List<LibraryItem> selectedItems,
-    @Default(false) bool showCategoryTabs,
-    @Default(false) bool showWorkCount,
-    @Default(false) bool showContinueReadingButton,
     @Default(false) bool hasActiveFilters,
   }) = _LibraryStateModel;
 

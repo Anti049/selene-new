@@ -1,13 +1,49 @@
 import 'package:auto_route/annotations.dart';
 import 'package:flutter/material.dart';
-import 'package:selene/common/widgets/empty.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:material_symbols_icons/symbols.dart';
+import 'package:selene/core/database/models/preference.dart';
+import 'package:selene/core/utils/enums.dart';
+import 'package:selene/core/utils/theming.dart';
+import 'package:selene/features/library/providers/library_preferences.dart';
 
 @RoutePage()
-class SortOptionsTab extends StatelessWidget {
+class SortOptionsTab extends ConsumerWidget {
   const SortOptionsTab({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return Empty(message: 'Sort Options Not Implemented');
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Get provider
+    final libraryPrefs = ref.watch(libraryPreferencesProvider);
+
+    // Return ListView
+    return ListView(
+      controller: ScrollController(),
+      shrinkWrap: true,
+      physics: const BouncingScrollPhysics(),
+      padding: EdgeInsets.zero,
+      children:
+          SortBy.values.map((sortBy) {
+            return ListTile(
+              title: Text(sortBy.label),
+              leading: Icon(
+                libraryPrefs.sortBy.get() == sortBy
+                    ? libraryPrefs.sortOrder.get() == SortOrder.ascending
+                        ? Symbols.arrow_upward
+                        : Symbols.arrow_downward
+                    : null,
+                color: context.scheme.primary,
+              ),
+              onTap: () {
+                if (libraryPrefs.sortBy.get() == sortBy) {
+                  libraryPrefs.sortOrder.cycle(SortOrder.values);
+                } else {
+                  libraryPrefs.sortBy.set(sortBy);
+                  libraryPrefs.sortOrder.set(SortOrder.ascending);
+                }
+              },
+            );
+          }).toList(),
+    );
   }
 }

@@ -2,15 +2,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'tag.freezed.dart';
 
-enum TagType {
-  info,
-  fandom,
-  character,
-  friendship,
-  relationship,
-  freeform,
-  other,
-}
+enum TagType { info, fandom, character, friendship, romance, freeform, other }
 
 @freezed
 class TagModel with _$TagModel {

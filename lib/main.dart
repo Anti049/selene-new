@@ -75,14 +75,14 @@ class MainApp extends ConsumerWidget {
         return SystemThemeBuilder(
           builder: (context, accent) {
             // Get current theme
-            final themeID = appearancePrefs.themeID.value ?? 'system';
+            final themeID = appearancePrefs.themeID.get() ?? 'system';
             // Use async getThemeById if ThemeRepository uses async methods
             final activeTheme = themeRepository.getThemeByIdSync(
               themeID,
             ); // Keep sync if repo supports it
 
             // Get current theme mode
-            final themeMode = appearancePrefs.themeMode.value;
+            final themeMode = appearancePrefs.themeMode.get();
             final lightTheme =
                 activeTheme?.light() ?? ThemeData.light(useMaterial3: true);
             final darkTheme =

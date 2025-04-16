@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:dartx/dartx.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:rxdart/rxdart.dart' hide DebounceExtensions;
 import 'package:selene/core/database/mappers/work_mapper.dart';
@@ -22,16 +23,21 @@ class LibraryState extends _$LibraryState {
   @override
   Stream<LibraryStateModel> build() {
     // Get providers
-    final libraryPrefs = ref.watch(libraryPreferencesProvider);
     final logger = ref.read(loggerProvider);
+    final sortBy = ref.watch(
+      libraryPreferencesProvider.select((prefs) => prefs.sortBy.get()),
+    );
+    final sortOrder = ref.watch(
+      libraryPreferencesProvider.select((prefs) => prefs.sortOrder.get()),
+    );
 
     return Rx.combineLatest3(
-      _libraryItemsStream(),
+      _libraryItemsStream(sortBy, sortOrder),
       _preferencesStream(),
       _searchQueryStream().distinct().debounce(
         const Duration(milliseconds: 300),
       ),
-      (libraryItems, preferences, searchQuery) {
+      (libraryItems, filterPrefs, searchQuery) {
         // --- Filtering Logic ---
         // Filter by search query
         final queriedLibraryItems =
@@ -54,12 +60,12 @@ class LibraryState extends _$LibraryState {
         // Filter by preferences (adapt your logic here)
         final filteredLibraryItems =
             queriedLibraryItems.where((item) {
-              if (preferences.downloadedOnlyMode ==
+              if (filterPrefs.downloadedOnlyMode ==
                   true /* && !item.isDownloaded*/ ) {
                 // return false;
               }
               // Example: Filter Unread (from Library Prefs)
-              if (preferences.filterUnread ==
+              if (filterPrefs.filterUnread ==
                   true /* && item.unreadCount <= 0*/ ) {
                 // return false;
               }
@@ -79,19 +85,14 @@ class LibraryState extends _$LibraryState {
                 )
                 .toList();
 
-        // Determine if any filters are active (including search)
-        final hasActiveFilters =
-            libraryPrefs.anyOptionsActive ||
-            (searchQuery != null && searchQuery.isNotEmpty);
+        final hasActiveFilters = filterPrefs.hasActiveFilters;
+        final hasActiveSearch = searchQuery.isNotNullOrEmpty;
 
         return LibraryStateModel(
           items: filteredLibraryItems,
           searchQuery: searchQuery,
           selectedItems: validSelectedItems,
-          showCategoryTabs: libraryPrefs.showCategoryTabs.value,
-          showWorkCount: libraryPrefs.showWorkCount.value,
-          showContinueReadingButton: preferences.showContinueReadingButton,
-          hasActiveFilters: hasActiveFilters, // Updated filter status
+          hasActiveFilters: hasActiveFilters || hasActiveSearch,
         );
       },
     ).handleError((error, stackTrace) {
@@ -108,24 +109,17 @@ class LibraryState extends _$LibraryState {
         items: [],
         searchQuery: null, // Keep search query if possible
         selectedItems: [],
-        // Use default preference values or fetch them synchronously if possible
-        showCategoryTabs:
-            ref.read(libraryPreferencesProvider).showCategoryTabs.value,
-        showWorkCount: ref.read(libraryPreferencesProvider).showWorkCount.value,
-        showContinueReadingButton:
-            ref
-                .read(libraryPreferencesProvider)
-                .showContinueReadingButton
-                .value,
-        hasActiveFilters: ref.read(libraryPreferencesProvider).anyOptionsActive,
+        hasActiveFilters: false, // Reset filters on error
       );
     });
   }
 
   // Get library items stream by watching the repository
-  Stream<List<LibraryItem>> _libraryItemsStream() {
+  Stream<List<LibraryItem>> _libraryItemsStream(
+    SortBy sortBy,
+    SortOrder sortOrder,
+  ) {
     // Get preferences needed for sorting
-    final libraryPrefs = ref.watch(libraryPreferencesProvider);
     final worksRepository = ref.watch(worksRepositoryProvider);
     // Watch Isar instance readiness
     final isarAsyncValue = ref.watch(isarProvider);
@@ -164,8 +158,6 @@ class LibraryState extends _$LibraryState {
             }
 
             // --- Sorting Logic (on List<WorkModel>) ---
-            final sortBy = libraryPrefs.sortBy.value;
-            final sortOrder = libraryPrefs.sortOrder.value;
             final mutableWorks = List<WorkModel>.from(workModels);
             // (Sorting logic remains the same as your previous version)
             mutableWorks.sort((a, b) {
@@ -254,63 +246,46 @@ class LibraryState extends _$LibraryState {
 
   // Get preferences stream
   Stream<LibraryItemPreferences> _preferencesStream() {
-    // Get preferences
+    // Get ONLY filtering preferences
     final libraryPrefs = ref.watch(libraryPreferencesProvider);
     final morePrefs = ref.watch(morePreferencesProvider);
 
-    // Combine streams
-    return Rx.combineLatest(
-      [
-        libraryPrefs.showDownloadedCount.stream.startWith(
-          libraryPrefs.showDownloadedCount.value,
-        ), // 0
-        libraryPrefs.showUnreadCount.stream.startWith(
-          libraryPrefs.showUnreadCount.value,
-        ), // 1
-        libraryPrefs.showContinueReadingButton.stream.startWith(
-          libraryPrefs.showContinueReadingButton.value,
-        ), // 2
-        libraryPrefs.showFavorite.stream.startWith(
-          libraryPrefs.showFavorite.value,
-        ), // 3
-        libraryPrefs.filterDownloaded.stream.startWith(
-          libraryPrefs.filterDownloaded.value,
-        ), // 4
-        libraryPrefs.filterUnread.stream.startWith(
-          libraryPrefs.filterUnread.value,
-        ), // 5
-        libraryPrefs.filterFavorites.stream.startWith(
-          libraryPrefs.filterFavorites.value,
-        ), // 6
-        libraryPrefs.filterStarted.stream.startWith(
-          libraryPrefs.filterStarted.value,
-        ), // 7
-        libraryPrefs.filterCompleted.stream.startWith(
-          libraryPrefs.filterCompleted.value,
-        ), // 8
-        libraryPrefs.filterUpdated.stream.startWith(
-          libraryPrefs.filterUpdated.value,
-        ), // 9
-        morePrefs.downloadedOnlyMode.stream.startWith(
-          morePrefs.downloadedOnlyMode.value,
-        ), // 10
-      ],
+    // Combine streams for filtering preferences ONLY
+    return Rx.combineLatestList([
+      libraryPrefs.filterDownloaded.stream.startWith(
+        libraryPrefs.filterDownloaded.get(),
+      ), // 0
+      libraryPrefs.filterUnread.stream.startWith(
+        libraryPrefs.filterUnread.get(),
+      ), // 1
+      libraryPrefs.filterFavorites.stream.startWith(
+        libraryPrefs.filterFavorites.get(),
+      ), // 2
+      libraryPrefs.filterStarted.stream.startWith(
+        libraryPrefs.filterStarted.get(),
+      ), // 3
+      libraryPrefs.filterCompleted.stream.startWith(
+        libraryPrefs.filterCompleted.get(),
+      ), // 4
+      libraryPrefs.filterUpdated.stream.startWith(
+        libraryPrefs.filterUpdated.get(),
+      ), // 5
+      morePrefs.downloadedOnlyMode.stream.startWith(
+        morePrefs.downloadedOnlyMode.get(),
+      ), // 6
+    ]).map(
       (values) {
         return LibraryItemPreferences(
-          showDownloadCount: values[0],
-          showUnreadCount: values[1],
-          showContinueReadingButton: values[2],
-          showFavorite: values[3],
-          filterDownloaded: values[4],
-          filterUnread: values[5],
-          filterFavorite: values[6],
-          filterStarted: values[7],
-          filterCompleted: values[8],
-          filterUpdated: values[9],
-          downloadedOnlyMode: values[10],
+          filterDownloaded: (values[0] as TriState).toBool(),
+          filterUnread: (values[1] as TriState).toBool(),
+          filterFavorite: (values[2] as TriState).toBool(),
+          filterStarted: (values[3] as TriState).toBool(),
+          filterCompleted: (values[4] as TriState).toBool(),
+          filterUpdated: (values[5] as TriState).toBool(),
+          downloadedOnlyMode: values[6] as bool?,
         );
       },
-    );
+    ).distinct(); // Keep distinct to avoid unnecessary updates if prefs object is identical
   }
 
   // --- General Utilities ---
@@ -324,7 +299,6 @@ class LibraryState extends _$LibraryState {
       final newState = updater(currentState);
       // Update the state with the new model wrapped in AsyncData
       state = AsyncData(newState);
-      refresh(); // Refresh the state to trigger UI updates
     } else if (state is AsyncError) {
       // Optionally handle updates even if the last state was an error
       // Might need to create a new LibraryStateModel from scratch or defaults
@@ -344,7 +318,12 @@ class LibraryState extends _$LibraryState {
 
   // --- Search Utilities ---
   Stream<String?> _searchQueryStream() async* {
-    yield state.valueOrNull?.searchQuery;
+    // Yield the current search query immediately if available
+    final currentQuery = state.valueOrNull?.searchQuery;
+    if (currentQuery != null) {
+      yield currentQuery;
+    }
+    yield state.valueOrNull?.searchQuery; // Keep the original simpler version
   }
 
   // Start searching

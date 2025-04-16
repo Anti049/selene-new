@@ -2,6 +2,8 @@ import 'package:change_case/change_case.dart';
 import 'package:flutter/material.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:selene/core/database/models/preference.dart';
+import 'package:selene/features/settings/presentation/widgets/button_setting_widget.dart';
+import 'package:selene/features/settings/presentation/widgets/checkbox_setting_widget.dart';
 import 'package:selene/features/settings/presentation/widgets/link_setting_widget.dart';
 import 'package:selene/features/settings/presentation/widgets/segmented_setting_widget.dart';
 import 'package:selene/features/settings/presentation/widgets/settings_group_widget.dart';
@@ -11,6 +13,7 @@ part 'searchable_setting_item.freezed.dart';
 
 enum SettingType {
   switchSetting,
+  checkboxSetting,
   sliderSetting,
   segmentedSetting,
   dropdownSetting,
@@ -79,6 +82,16 @@ class SearchableSettingItem with _$SearchableSettingItem {
     switch (type) {
       case SettingType.switchSetting:
         return SwitchSettingWidget(setting: this);
+      case SettingType.checkboxSetting:
+        return CheckboxSettingWidget(
+          label: label,
+          subtitle: subtitle,
+          icon: icon,
+          preference: preference!,
+          checkboxPosition: CheckboxPosition.leading,
+          enabled:
+              true, // Assuming enabled is always true for checkbox settings
+        );
       // case SettingType.sliderSetting:
       //   return SliderSettingWidget(setting: this);
       case SettingType.segmentedSetting:
@@ -87,8 +100,8 @@ class SearchableSettingItem with _$SearchableSettingItem {
       //   return DropdownSettingWidget(setting: this);
       // case SettingType.textSetting:
       //   return TextSettingWidget(setting: this);
-      // case SettingType.buttonSetting:
-      //   return ButtonSettingWidget(setting: this);
+      case SettingType.buttonSetting:
+        return ButtonSettingWidget(setting: this);
       case SettingType.linkSetting:
         return LinkSettingWidget(setting: this);
       case SettingType.widgetSetting:

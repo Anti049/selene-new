@@ -8,15 +8,19 @@ import 'package:selene/common/widgets/empty.dart';
 import 'package:selene/common/widgets/intent_frame.dart';
 import 'package:selene/common/widgets/padded_app_bar.dart';
 import 'package:selene/core/constants/animation_constants.dart';
+import 'package:selene/core/database/models/preference.dart';
 import 'package:selene/core/database/models/work.dart';
 import 'package:selene/core/database/providers/library_providers.dart';
+import 'package:selene/core/utils/enums.dart';
 import 'package:selene/core/utils/theming.dart';
 import 'package:selene/features/banners/models/providers/banner_state_provider.dart';
+import 'package:selene/features/library/models/library_item.dart';
 import 'package:selene/features/library/models/library_state.dart';
 import 'package:selene/features/library/presentation/screens/display_options_tab.dart';
 import 'package:selene/features/library/presentation/screens/filter_options_tab.dart';
 import 'package:selene/features/library/presentation/screens/sort_options_tab.dart';
 import 'package:selene/features/library/presentation/screens/tag_options_tab.dart';
+import 'package:selene/features/library/presentation/widgets/library_component_item.dart';
 import 'package:selene/features/library/providers/library_preferences.dart';
 import 'package:selene/features/library/providers/library_state_provider.dart';
 
@@ -36,14 +40,24 @@ class _LibraryTabState extends ConsumerState<LibraryTab>
     length: 3,
     vsync: this,
   );
+  final _scrollController = ScrollController();
   final DraggableMenuController _draggableMenuController =
       DraggableMenuController();
 
   PreferredSizeWidget _buildAppBar(BuildContext context) {
     // Get providers
-    final libraryPrefs = ref.watch(libraryPreferencesProvider);
+    final showCategoryTabs = ref.watch(
+      libraryPreferencesProvider.select(
+        (prefs) => prefs.showCategoryTabs.get(),
+      ),
+    );
+    final showWorkCount = ref.watch(
+      libraryPreferencesProvider.select((prefs) => prefs.showWorkCount.get()),
+    );
+    final numOptionsActive = ref.watch(
+      libraryPreferencesProvider.select((prefs) => prefs.numOptionsActive),
+    );
     final libraryState = ref.watch(libraryStateProvider);
-    final libraryNotifier = ref.watch(libraryStateProvider.notifier);
     final isTopBannerVisible = ref.watch(isTopBannerAreaCoveredProvider);
 
     // Compute data
@@ -63,8 +77,6 @@ class _LibraryTabState extends ConsumerState<LibraryTab>
       data: (libraryState) => libraryState.items.length,
       orElse: () => 0,
     );
-    final showCategoryTabs = libraryPrefs.showCategoryTabs.value;
-    final showWorkCount = libraryPrefs.showWorkCount.value;
 
     // Return widget
     return PaddedAppBar(
@@ -79,7 +91,9 @@ class _LibraryTabState extends ConsumerState<LibraryTab>
                   border: InputBorder.none,
                 ),
                 onChanged: (value) {
-                  libraryNotifier.updateSearchQuery(value);
+                  ref
+                      .read(libraryStateProvider.notifier)
+                      .updateSearchQuery(value);
                 },
               )
               : isSelectionActive
@@ -105,14 +119,14 @@ class _LibraryTabState extends ConsumerState<LibraryTab>
                 IconButton(
                   icon: const Icon(Symbols.select_all),
                   onPressed: () {
-                    libraryNotifier.selectAll();
+                    ref.read(libraryStateProvider.notifier).selectAll();
                   },
                 ),
                 // Invert Selection
                 IconButton(
                   icon: const Icon(Symbols.flip_to_back),
                   onPressed: () {
-                    libraryNotifier.invertSelection();
+                    ref.read(libraryStateProvider.notifier).invertSelection();
                   },
                 ),
               ]
@@ -121,20 +135,18 @@ class _LibraryTabState extends ConsumerState<LibraryTab>
                   IconButton(
                     icon: const Icon(Symbols.search),
                     onPressed: () {
-                      libraryNotifier.startSearching();
+                      ref.read(libraryStateProvider.notifier).startSearching();
                     },
                   ),
                 IconButton(
                   icon: Badge(
-                    label: Text(libraryPrefs.numOptionsActive.toString()),
-                    isLabelVisible: libraryPrefs.anyOptionsActive,
+                    label: Text(numOptionsActive.toString()),
+                    isLabelVisible: numOptionsActive > 0,
                     child: Icon(
                       Symbols.filter_alt,
                       color:
-                          libraryPrefs.anyOptionsActive
-                              ? context.scheme.primary
-                              : null,
-                      fill: libraryPrefs.anyOptionsActive ? 1.0 : 0.0,
+                          numOptionsActive > 0 ? context.scheme.primary : null,
+                      fill: numOptionsActive > 0 ? 1.0 : 0.0,
                     ),
                   ),
                   onPressed: () {
@@ -146,6 +158,7 @@ class _LibraryTabState extends ConsumerState<LibraryTab>
                   icon: const Icon(Symbols.refresh),
                   onPressed: () {
                     _refreshKey.currentState?.show();
+                    ref.read(libraryStateProvider.notifier).refresh();
                   },
                   tooltip: 'Update Library',
                 ),
@@ -171,6 +184,9 @@ class _LibraryTabState extends ConsumerState<LibraryTab>
               ? IconButton(
                 icon: const Icon(Symbols.close),
                 onPressed: () {
+                  final libraryNotifier = ref.read(
+                    libraryStateProvider.notifier,
+                  );
                   if (isSearchActive) {
                     libraryNotifier.stopSearching();
                   } else if (isSelectionActive) {
@@ -179,43 +195,103 @@ class _LibraryTabState extends ConsumerState<LibraryTab>
                 },
               )
               : null,
-      bottom:
-          showCategoryTabs
-              ? TabBar(
-                controller: _tabController,
-                tabs: [
-                  Tab(text: 'All'),
-                  Tab(text: 'Reading'),
-                  Tab(text: 'Completed'),
-                ],
-              )
-              : null,
+      bottom: showCategoryTabs ? _buildCategoryTabs(context) : null,
+    );
+  }
+
+  PreferredSizeWidget _buildCategoryTabs(BuildContext context) {
+    return TabBar(
+      controller: _tabController,
+      tabs: [Tab(text: 'All'), Tab(text: 'Reading'), Tab(text: 'Completed')],
     );
   }
 
   Widget _buildContent(BuildContext context, LibraryStateModel libraryState) {
-    return IntentFrame(
-      onRefresh: _onRefresh,
-      refreshKey: _refreshKey,
-      child: Empty(
-        message: 'Library Not Implemented',
-        subtitle:
-            '${libraryState.workCount} Work${libraryState.workCount != 1 ? 's' : ''} Found',
+    // Get providers
+    final displayMode = ref.watch(
+      libraryPreferencesProvider.select((prefs) => prefs.displayMode.get()),
+    );
+
+    return RawScrollbar(
+      controller: _scrollController,
+      interactive: true,
+      thickness: 8.0,
+      radius: const Radius.circular(4.0),
+      trackVisibility: true,
+      padding: const EdgeInsets.only(bottom: 80.0, top: 4.0, right: 4.0),
+      thumbColor: context.scheme.primary,
+      child: switch (displayMode) {
+        DisplayMode.widgetList => _buildComponentListContent(
+          context,
+          libraryState,
+        ),
+        _ => IntentFrame(
+          onRefresh: () => ref.read(libraryStateProvider.notifier).refresh(),
+          refreshKey: _refreshKey,
+          child: Empty(
+            message: '${displayMode.label} Not Implemented',
+            subtitle:
+                '${libraryState.workCount} Work${libraryState.workCount != 1 ? 's' : ''} Found',
+          ),
+        ),
+      },
+    );
+  }
+
+  Widget _buildComponentListContent(
+    BuildContext context,
+    LibraryStateModel libraryState,
+  ) {
+    // Get providers
+    final libraryNotifier = ref.watch(libraryStateProvider.notifier);
+
+    // Return widget
+    return RefreshIndicator(
+      onRefresh: () => libraryNotifier.refresh(),
+      key: _refreshKey,
+      child: ListView(
+        padding: EdgeInsets.symmetric(vertical: 4.0),
+        controller: _scrollController,
+        children: [
+          for (final item in libraryState.items)
+            LibraryComponentItem(
+              work: item.work,
+              isSelected: libraryState.isSelected(item),
+              onTap: (workID) {
+                if (libraryState.isSelectionActive) {
+                  // Handle tap on work when selection is active
+                  libraryNotifier.toggleSelection(item);
+                } else {
+                  // Handle normal tap on work
+                }
+              },
+              onLongPress: (workID) {
+                if (libraryState.isSelectionActive) {
+                  // Start selection mode if not already active
+                  libraryNotifier.toggleRangeSelection(item);
+                } else {
+                  // Toggle selection for the work
+                  libraryNotifier.toggleSelection(item);
+                }
+              },
+            ),
+          // SizedBox for clearing the FAB area
+          SizedBox(height: 80.0),
+        ],
       ),
     );
   }
 
-  Widget _buildSelectionToolbar(BuildContext context) {
+  Widget _buildSelectionToolbar(
+    BuildContext context,
+    List<LibraryItem> selectedItems,
+  ) {
     // Get providers
-    final libraryState = ref.watch(libraryStateProvider);
     final worksRepository = ref.watch(worksRepositoryProvider);
 
     // Return widget
     return AnimatedVisibility(
-      visible: libraryState.maybeWhen(
-        data: (data) => data.isSearchActive,
-        orElse: () => false,
-      ),
+      visible: selectedItems.isNotEmpty,
       enter: slideInVertically(curve: kAnimationCurve),
       enterDuration: kAnimationDuration,
       exit: slideOutVertically(curve: kAnimationCurve),
@@ -258,15 +334,7 @@ class _LibraryTabState extends ConsumerState<LibraryTab>
               tooltip: 'Delete',
               onPressed: () async {
                 final selectedWorks =
-                    libraryState.maybeWhen(
-                          data:
-                              (data) =>
-                                  data.selectedItems
-                                      .map((e) => e.itemID)
-                                      .toList(),
-                          orElse: () => [],
-                        )
-                        as List<int>;
+                    selectedItems.map((e) => e.itemID).toList();
                 for (final workID in selectedWorks) {
                   await worksRepository.deleteWorkById(workID);
                 }
@@ -282,47 +350,101 @@ class _LibraryTabState extends ConsumerState<LibraryTab>
   void _showOptionsSheet(BuildContext context) {
     DraggableMenu.open(
       context,
-      DraggableMenu(
-        curve: kAnimationCurve,
-        animationDuration: kAnimationDuration,
-        controller: _draggableMenuController,
-        ui: ClassicDraggableMenu(color: context.scheme.surfaceContainer),
-        levels: [
-          DraggableMenuLevel.ratio(ratio: 0.6),
-          DraggableMenuLevel.ratio(ratio: 1.0),
-        ],
-        child: DefaultTabController(
-          length: 4,
-          child: Column(
-            children: [
-              TabBar(
-                tabs: [
-                  Tab(text: 'Filter'),
-                  Tab(text: 'Sort'),
-                  Tab(text: 'Display'),
-                  Tab(text: 'Tags'),
-                ],
-              ),
-              Expanded(
-                child: TabBarView(
-                  children: [
-                    FilterOptionsTab(),
-                    SortOptionsTab(),
-                    DisplayOptionsTab(),
-                    TagOptionsTab(),
+      SafeArea(
+        child: DraggableMenu(
+          curve: kAnimationCurve,
+          animationDuration: kAnimationDuration,
+          controller: _draggableMenuController,
+          ui: ClassicDraggableMenu(color: context.scheme.surfaceContainer),
+          levels: [
+            DraggableMenuLevel.ratio(ratio: 0.6),
+            DraggableMenuLevel.ratio(ratio: 1.0),
+          ],
+          child: DefaultTabController(
+            length: 4,
+            child: Column(
+              children: [
+                TabBar(
+                  tabs: [
+                    Tab(text: 'Filter'),
+                    Tab(text: 'Sort'),
+                    Tab(text: 'Display'),
+                    Tab(text: 'Tags'),
                   ],
                 ),
-              ),
-            ],
+                Expanded(
+                  child: TabBarView(
+                    children: [
+                      FilterOptionsTab(),
+                      SortOptionsTab(),
+                      DisplayOptionsTab(),
+                      TagOptionsTab(),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Future<void> _onRefresh() async {
-    final libraryNotifier = ref.read(libraryStateProvider.notifier);
-    await libraryNotifier.refresh();
+  Widget _buildFloatingActionButtons(
+    BuildContext context,
+    bool showContinueButton,
+  ) {
+    // Get prefs provider once
+    final libraryPrefs = ref.read(libraryPreferencesProvider);
+    final worksRepo = ref.read(worksRepositoryProvider); // Use read for actions
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.end, // Align to end
+      spacing: 8.0,
+      children: [
+        FloatingActionButton(
+          heroTag: 'fab_continue_reading', // Unique HeroTag
+          tooltip:
+              'Toggle Continue Reading Button Visibility', // Example tooltip
+          foregroundColor: context.scheme.onTertiaryContainer,
+          backgroundColor: context.scheme.tertiaryContainer,
+          splashColor: context.scheme.onTertiaryContainer.withValues(
+            alpha: 0.1,
+          ),
+          onPressed: () {
+            // Toggle the specific preference using read
+            libraryPrefs.showWorkCount.toggle();
+          },
+          child: const Icon(Symbols.play_arrow),
+        ),
+        FloatingActionButton(
+          heroTag: 'fab_cycle_display', // Unique HeroTag
+          tooltip: 'Cycle Display Mode',
+          foregroundColor: context.scheme.onSecondaryContainer,
+          backgroundColor: context.scheme.secondaryContainer,
+          splashColor: context.scheme.onSecondaryContainer.withValues(
+            alpha: 0.1,
+          ),
+          onPressed: () {
+            // Cycle display mode using read
+            libraryPrefs.displayMode.cycle(DisplayMode.values);
+          },
+          child: const Icon(Symbols.view_list), // Changed icon example
+        ),
+        FloatingActionButton(
+          heroTag: 'fab_add_work', // Unique HeroTag
+          tooltip: 'Add Random Work',
+          onPressed: () async {
+            final work = WorkModel.generateRandomWork();
+            await worksRepo.upsertWork(work);
+            // Optionally trigger a refresh if needed, though the stream should update
+            // ref.read(libraryStateProvider.notifier).refresh();
+          },
+          child: const Icon(Symbols.add),
+        ),
+      ],
+    );
   }
 
   @override
@@ -346,10 +468,11 @@ class _LibraryTabState extends ConsumerState<LibraryTab>
       canPop: !isSearchActive && !isSelectionActive,
       onPopInvokedWithResult: (didPop, result) {
         if (!didPop) {
+          final notifier = ref.read(libraryStateProvider.notifier);
           if (isSearchActive) {
-            libraryNotifier.stopSearching();
+            notifier.stopSearching();
           } else if (isSelectionActive) {
-            libraryNotifier.clearSelection();
+            notifier.clearSelection();
           }
         }
       },
@@ -360,7 +483,7 @@ class _LibraryTabState extends ConsumerState<LibraryTab>
           loading: () => Empty(message: 'Loading...'),
           error:
               (error, stackTrace) => IntentFrame(
-                onRefresh: _onRefresh,
+                onRefresh: () => libraryNotifier.refresh(),
                 refreshKey: _refreshKey,
                 child: Empty(
                   message: 'An error occurred!',
@@ -371,7 +494,7 @@ class _LibraryTabState extends ConsumerState<LibraryTab>
             // Check if library is empty
             if (libraryState.items.isEmpty) {
               return IntentFrame(
-                onRefresh: _onRefresh,
+                onRefresh: () => libraryNotifier.refresh(),
                 refreshKey: _refreshKey,
                 child: Empty(message: 'No Works Found'),
               );
@@ -379,24 +502,21 @@ class _LibraryTabState extends ConsumerState<LibraryTab>
             return _buildContent(context, libraryState);
           },
         ),
-        floatingActionButton: Column(
-          spacing: 8.0,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            FloatingActionButton(
-              child: const Icon(Symbols.add),
-              onPressed: () async {
-                // TODO: Implement adding a work from either a file or a URL
-                // For now, just generate a random work
-                final work = WorkModel.generateRandomWork();
-                // Add the work to the library
-                final worksRepository = ref.read(worksRepositoryProvider);
-                await worksRepository.upsertWork(work);
-              },
+        floatingActionButton: _buildFloatingActionButtons(
+          context,
+          ref.watch(
+            libraryPreferencesProvider.select(
+              (prefs) => prefs.showContinueReadingButton.get(),
             ),
-          ],
+          ),
         ),
-        bottomNavigationBar: _buildSelectionToolbar(context),
+        bottomNavigationBar: _buildSelectionToolbar(
+          context,
+          libraryState.maybeWhen(
+            data: (libraryState) => libraryState.selectedItems,
+            orElse: () => [],
+          ),
+        ),
       ),
     );
   }
