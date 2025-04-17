@@ -6,6 +6,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:selene/core/database/tables/app_themes_table.dart';
 import 'package:selene/core/database/tables/authors_table.dart';
 import 'package:selene/core/database/tables/chapters_table.dart';
+import 'package:selene/core/database/tables/fandoms_table.dart';
 import 'package:selene/core/database/tables/preferences_table.dart';
 import 'package:selene/core/database/tables/series_table.dart';
 import 'package:selene/core/database/tables/tags_table.dart';
@@ -36,6 +37,7 @@ Future<Isar> isar(Ref ref) async {
       IsarThemeSchema,
       // Library schemas
       WorkSchema,
+      FandomSchema,
       AuthorSchema,
       SeriesSchema,
       TagSchema,

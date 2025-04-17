@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:animated_visibility/animated_visibility.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,6 +10,7 @@ import 'package:selene/core/database/models/work.dart';
 import 'package:selene/core/utils/theming.dart';
 import 'package:selene/features/library/presentation/widgets/tag_chip.dart';
 import 'package:selene/features/library/providers/library_preferences.dart';
+import 'package:percent_indicator/percent_indicator.dart';
 
 class LibraryComponentItem extends ConsumerStatefulWidget {
   const LibraryComponentItem({
@@ -30,6 +33,7 @@ class LibraryComponentItem extends ConsumerStatefulWidget {
 
 class _LibraryComponentItemState extends ConsumerState<LibraryComponentItem> {
   bool _isExpanded = false;
+  double _readProgress = 0.5; // Placeholder for read progress
 
   void _toggleExpansion() {
     setState(() {
@@ -92,7 +96,7 @@ class _LibraryComponentItemState extends ConsumerState<LibraryComponentItem> {
 
     // Return widget
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+      padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
       child: GestureDetector(
         onTap: () => widget.onTap(widget.work.id!),
         onLongPress: () => widget.onLongPress(widget.work.id!),
@@ -108,7 +112,15 @@ class _LibraryComponentItemState extends ConsumerState<LibraryComponentItem> {
                       8.0,
                     )
                     : context.scheme.surfaceContainerHigh,
-            borderRadius: BorderRadius.circular(8.0),
+            borderRadius: BorderRadius.circular(6.0),
+            border: Border.all(
+              color:
+                  widget.isSelected
+                      ? context.scheme.primary
+                      : context.scheme.outlineVariant,
+              width: 2.0,
+              strokeAlign: BorderSide.strokeAlignOutside,
+            ),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -118,15 +130,13 @@ class _LibraryComponentItemState extends ConsumerState<LibraryComponentItem> {
               // Header
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.fromLTRB(12.0, 8.0, 16.0, 8.0),
+                padding: const EdgeInsets.fromLTRB(12.0, 8.0, 12.0, 8.0),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   mainAxisAlignment: MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   spacing: 16.0,
                   children: [
-                    if (widget.isSelected)
-                      Icon(Symbols.check_circle, color: context.scheme.primary),
                     // Title, Fandom(s), and Author(s)
                     Expanded(
                       child: Column(
@@ -163,7 +173,7 @@ class _LibraryComponentItemState extends ConsumerState<LibraryComponentItem> {
                               ),
                               Flexible(
                                 child: Text(
-                                  'Fandom Name', // Placeholder for actual fandom name or other info
+                                  widget.work.fandomNames,
                                   style: context.text.labelMedium?.copyWith(
                                     color:
                                         widget.isSelected
@@ -238,6 +248,11 @@ class _LibraryComponentItemState extends ConsumerState<LibraryComponentItem> {
                                   // context.router.push(
                                   //   ReaderRoute(work: widget.work),
                                   // );
+                                  setState(() {
+                                    _readProgress =
+                                        Random().nextInt(101) /
+                                        100.0; // Simulate read progress
+                                  });
                                 },
                               ),
                           ],
@@ -248,11 +263,24 @@ class _LibraryComponentItemState extends ConsumerState<LibraryComponentItem> {
                 ),
               ),
               // Progress Bar
-              LinearProgressIndicator(
-                value: 0.7, // TODO: Implement real read progress
-                backgroundColor: context.scheme.outlineVariant,
-                color: context.scheme.primary,
-                minHeight: 4,
+              LinearPercentIndicator(
+                percent: _readProgress, // TODO: Implement real read progress
+                backgroundColor:
+                    widget.isSelected
+                        ? ElevationOverlay.applySurfaceTint(
+                          context.scheme.outlineVariant,
+                          context.scheme.primary,
+                          8.0,
+                        )
+                        : context.scheme.outlineVariant,
+                progressColor: context.scheme.primary,
+                lineHeight: 4,
+                animation: true,
+                animationDuration: kAnimationDuration.inMilliseconds,
+                curve: kAnimationCurve,
+                padding: EdgeInsets.zero,
+                animateFromLastPercent: true,
+                animateToInitialPercent: false,
               ),
               // Tags Section
               AnimatedVisibility(
@@ -263,7 +291,14 @@ class _LibraryComponentItemState extends ConsumerState<LibraryComponentItem> {
                 exitDuration: kAnimationDuration,
                 child: Container(
                   width: double.infinity,
-                  color: context.scheme.surfaceContainer,
+                  color:
+                      widget.isSelected
+                          ? ElevationOverlay.applySurfaceTint(
+                            context.scheme.surfaceContainer,
+                            context.scheme.primary,
+                            8.0,
+                          )
+                          : context.scheme.surfaceContainer,
                   padding: const EdgeInsets.all(8.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,

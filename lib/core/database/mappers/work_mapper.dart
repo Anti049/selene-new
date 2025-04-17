@@ -1,5 +1,6 @@
 import 'package:selene/core/database/mappers/author_mapper.dart';
 import 'package:selene/core/database/mappers/chapter_mapper.dart';
+import 'package:selene/core/database/mappers/fandom_mapper.dart';
 import 'package:selene/core/database/mappers/series_mapper.dart';
 import 'package:selene/core/database/mappers/tag_mapper.dart';
 import 'package:selene/core/database/models/work.dart';
@@ -14,6 +15,7 @@ class WorkMapper {
   static Future<WorkModel> mapToModel(Work work) async {
     // Load related entities concurrently for efficiency
     await Future.wait([
+      work.fandoms.load(),
       work.authors.load(),
       work.series.load(),
       work.tags.load(),
@@ -21,6 +23,9 @@ class WorkMapper {
     ]);
 
     // Map the loaded entities to their respective models
+    final fandomsFuture = Future.wait(
+      work.fandoms.map((fandom) => FandomMapper.mapToModel(fandom)),
+    );
     final authorsFuture = Future.wait(
       work.authors.map((author) => AuthorMapper.mapToModel(author)),
     );
@@ -35,6 +40,7 @@ class WorkMapper {
     );
 
     // Wait for all futures to complete
+    final fandoms = await fandomsFuture;
     final authors = await authorsFuture;
     final series = await seriesFuture;
     final tags = await tagsFuture;
@@ -46,6 +52,7 @@ class WorkMapper {
       title: work.title,
       sourceURL: work.sourceURL,
       summary: work.summary,
+      fandoms: fandoms,
       wordCount: work.wordCount,
       status: work.status,
       coverURL: work.coverURL,

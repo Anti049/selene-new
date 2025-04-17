@@ -41,7 +41,7 @@ class BannerWidget extends StatelessWidget {
       alignment: Alignment.center,
       child: Text(
         label,
-        style: context.text.bodyMedium?.copyWith(color: textColor),
+        style: context.text.labelMedium?.copyWith(color: textColor),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),

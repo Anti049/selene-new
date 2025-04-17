@@ -22,28 +22,30 @@ class SortOptionsTab extends ConsumerWidget {
       shrinkWrap: true,
       physics: const BouncingScrollPhysics(),
       padding: EdgeInsets.zero,
-      children:
-          SortBy.values.map((sortBy) {
-            return ListTile(
-              title: Text(sortBy.label),
-              leading: Icon(
-                libraryPrefs.sortBy.get() == sortBy
-                    ? libraryPrefs.sortOrder.get() == SortOrder.ascending
-                        ? Symbols.arrow_upward
-                        : Symbols.arrow_downward
-                    : null,
-                color: context.scheme.primary,
-              ),
-              onTap: () {
-                if (libraryPrefs.sortBy.get() == sortBy) {
-                  libraryPrefs.sortOrder.cycle(SortOrder.values);
-                } else {
-                  libraryPrefs.sortBy.set(sortBy);
-                  libraryPrefs.sortOrder.set(SortOrder.ascending);
-                }
-              },
-            );
-          }).toList(),
+      children: [
+        ...SortBy.values.map((sortBy) {
+          return ListTile(
+            title: Text(sortBy.label),
+            leading: Icon(
+              libraryPrefs.sortBy.get() == sortBy
+                  ? libraryPrefs.sortOrder.get() == SortOrder.ascending
+                      ? Symbols.arrow_upward
+                      : Symbols.arrow_downward
+                  : null,
+              color: context.scheme.primary,
+            ),
+            onTap: () {
+              if (libraryPrefs.sortBy.get() == sortBy) {
+                libraryPrefs.sortOrder.cycle(SortOrder.values);
+              } else {
+                libraryPrefs.sortBy.set(sortBy);
+                libraryPrefs.sortOrder.set(SortOrder.ascending);
+              }
+            },
+          );
+        }),
+        SizedBox(height: context.mediaQuery.systemGestureInsets.bottom),
+      ],
     );
   }
 }

@@ -2,6 +2,7 @@ import 'package:isar/isar.dart';
 import 'package:selene/core/database/models/work.dart';
 import 'package:selene/core/database/tables/authors_table.dart';
 import 'package:selene/core/database/tables/chapters_table.dart';
+import 'package:selene/core/database/tables/fandoms_table.dart';
 import 'package:selene/core/database/tables/series_table.dart';
 import 'package:selene/core/database/tables/tags_table.dart';
 
@@ -17,6 +18,8 @@ class Work {
   @Index(unique: true, caseSensitive: false)
   String? sourceURL;
   String? summary;
+  @Index()
+  final fandoms = IsarLinks<Fandom>();
   int? wordCount;
   @enumerated
   late WorkStatus status;

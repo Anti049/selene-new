@@ -3,16 +3,19 @@ import 'dart:collection';
 import 'package:isar/isar.dart';
 import 'package:selene/core/database/mappers/author_mapper.dart';
 import 'package:selene/core/database/mappers/chapter_mapper.dart';
+import 'package:selene/core/database/mappers/fandom_mapper.dart';
 import 'package:selene/core/database/mappers/series_mapper.dart';
 import 'package:selene/core/database/mappers/tag_mapper.dart';
 import 'package:selene/core/database/mappers/work_mapper.dart';
 import 'package:selene/core/database/models/author.dart';
 import 'package:selene/core/database/models/chapter.dart';
+import 'package:selene/core/database/models/fandom.dart';
 import 'package:selene/core/database/models/series.dart';
 import 'package:selene/core/database/models/tag.dart';
 import 'package:selene/core/database/models/work.dart';
 import 'package:selene/core/database/tables/authors_table.dart';
 import 'package:selene/core/database/tables/chapters_table.dart';
+import 'package:selene/core/database/tables/fandoms_table.dart';
 import 'package:selene/core/database/tables/series_table.dart';
 import 'package:selene/core/database/tables/tags_table.dart';
 import 'package:selene/core/database/tables/works_table.dart';
@@ -95,6 +98,12 @@ class WorkRepository {
 
     // Upsert the work to the database/Perform database operations within a transaction
     await _isar.writeTxn(() async {
+      // Handle fandom(s)
+      final fandomEntities = <Fandom>[];
+      for (var fandomModel in workModel.fandoms) {
+        fandomEntities.add(await _findOrCreateFandom(fandomModel));
+      }
+
       // Handle author(s)
       final authorEntities = <Author>[];
       for (var authorModel in workModel.authors) {
@@ -124,7 +133,11 @@ class WorkRepository {
       // Save the work entity to the database
       workID = await _isar.works.put(workEntity);
 
-      // Link the authors, series, tags, and chapters to the work
+      // Link the fandom(s), author(s), series, tag(s), and chapter(s) to the work
+      // - Fandoms
+      workEntity.fandoms.clear();
+      workEntity.fandoms.addAll(fandomEntities);
+      await workEntity.fandoms.save();
       // - Authors
       workEntity.authors.clear();
       workEntity.authors.addAll(authorEntities);
@@ -162,6 +175,9 @@ class WorkRepository {
       if (workToDelete == null) return;
 
       // Get all linked entities
+      // - Fandoms
+      await workToDelete.fandoms.load();
+      final fandomIDs = workToDelete.fandoms.map((e) => e.id).toSet();
       // - Authors
       await workToDelete.authors.load();
       final authorIDs = workToDelete.authors.map((e) => e.id).toSet();
@@ -188,6 +204,16 @@ class WorkRepository {
       // Delete all chapters linked to the work
       await _isar.chapters.deleteAll(chapterIDs);
       // Delete orphaned objects
+      // - Fandoms
+      for (final fandomID in fandomIDs) {
+        final fandom = await _isar.fandoms.get(fandomID);
+        if (fandom != null) {
+          await fandom.works.load();
+          if (fandom.works.isEmpty) {
+            await _isar.fandoms.delete(fandomID);
+          }
+        }
+      }
       // - Authors
       for (final authorID in authorIDs) {
         final author = await _isar.authors.get(authorID);
@@ -228,6 +254,36 @@ class WorkRepository {
   }
 
   // --- Helper Methods ---
+  /// Find or create a fandom in the [_isar] database
+  ///
+  /// Returns the [Fandom] that was found or created
+  Future<Fandom> _findOrCreateFandom(FandomModel fandomModel) async {
+    Fandom? fandomEntity;
+    if (fandomModel.id != null) {
+      fandomEntity = await _isar.fandoms.get(fandomModel.id!);
+    }
+    // Try finding by unique property if not found by ID or no ID given
+    // (Assuming Fandom has a unique 'sourceURL' or 'name')
+    if (fandomEntity == null && fandomModel.sourceURL != null) {
+      fandomEntity =
+          await _isar.fandoms
+              .filter()
+              .sourceURLEqualTo(fandomModel.sourceURL)
+              .findFirst();
+    }
+    // If still not found, create and save a new one
+    if (fandomEntity == null) {
+      fandomEntity = FandomMapper.mapToTable(fandomModel);
+      // Save the new entity to assign an ID
+      await _isar.fandoms.put(fandomEntity);
+    } else {
+      // Optionally: Update existing entity if model has newer data?
+      // authorEntity = AuthorMapper.updateEntityFromModel(authorEntity, model);
+      // await _isar.authors.put(authorEntity);
+    }
+    return fandomEntity;
+  }
+
   /// Find or create an author in the [_isar] database
   ///
   /// Returns the [Author] that was found or created

@@ -1,7 +1,6 @@
 import 'package:auto_route/annotations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:selene/core/database/models/preference.dart';
 import 'package:selene/core/utils/enums.dart';
 import 'package:selene/core/utils/theming.dart';
 import 'package:selene/features/library/providers/library_preferences.dart';
@@ -176,6 +175,7 @@ class DisplayOptionsTab extends ConsumerWidget {
             ],
           ),
         ),
+        SizedBox(height: context.mediaQuery.systemGestureInsets.bottom),
       ],
     );
   }

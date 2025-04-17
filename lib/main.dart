@@ -19,7 +19,10 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Enable edge-to-edge
-  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  SystemChrome.setEnabledSystemUIMode(
+    SystemUiMode.edgeToEdge,
+    overlays: [SystemUiOverlay.top, SystemUiOverlay.bottom],
+  );
 
   // Initialize system theme
   await SystemTheme.accentColor.load();

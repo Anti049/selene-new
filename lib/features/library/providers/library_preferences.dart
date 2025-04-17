@@ -168,6 +168,33 @@ class LibraryPreferences {
     }
   }
 
+  void resetAllLibraryPreferences() {
+    _resetLibraryPreferences([
+      showCategoryTabs,
+      showWorkCount,
+      showContinueReadingButton,
+      showDownloadedCount,
+      showUnreadCount,
+      showFavorite,
+      filterDownloaded,
+      filterUnread,
+      filterFavorites,
+      filterStarted,
+      filterCompleted,
+      filterUpdated,
+      sortBy,
+      sortOrder,
+      displayMode,
+      gridSize,
+      showPublishedDate,
+      showCharacterTags,
+      showFriendshipTags,
+      showRomanceTags,
+      showFreeformTags,
+      showDescription,
+    ]);
+  }
+
   int _countActivePreferences(List<Preference> preferences) =>
       preferences.where((pref) => pref.get() != pref.defaultValue).length;
 

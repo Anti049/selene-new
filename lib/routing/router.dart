@@ -38,7 +38,11 @@ class AppRouter extends RootStackRouter {
         AutoRoute(path: 'more', page: MoreRoute.page),
       ],
     ),
+    // Library -> Work Details
+    AutoRoute(path: '/library/:work', page: WorkDetailsRoute.page),
+    // More -> Settings
     AutoRoute(path: '/settings', page: SettingsRoute.page),
+    // More -> Settings -> Subpages
     AutoRoute(path: '/settings/appearance', page: AppearanceRoute.page),
   ];
 }

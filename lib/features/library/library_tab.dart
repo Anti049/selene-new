@@ -23,6 +23,7 @@ import 'package:selene/features/library/presentation/screens/tag_options_tab.dar
 import 'package:selene/features/library/presentation/widgets/library_component_item.dart';
 import 'package:selene/features/library/providers/library_preferences.dart';
 import 'package:selene/features/library/providers/library_state_provider.dart';
+import 'package:selene/routing/router.gr.dart';
 
 @RoutePage()
 class LibraryTab extends ConsumerStatefulWidget {
@@ -263,6 +264,9 @@ class _LibraryTabState extends ConsumerState<LibraryTab>
                   libraryNotifier.toggleSelection(item);
                 } else {
                   // Handle normal tap on work
+                  if (item.work.id != null) {
+                    context.router.push(WorkDetailsRoute(work: item.work));
+                  }
                 }
               },
               onLongPress: (workID) {
@@ -348,42 +352,118 @@ class _LibraryTabState extends ConsumerState<LibraryTab>
   }
 
   void _showOptionsSheet(BuildContext context) {
+    // Get providers
+    final libraryPrefs = ref.read(libraryPreferencesProvider);
+    // Open the draggable menu with options
     DraggableMenu.open(
       context,
-      SafeArea(
-        child: DraggableMenu(
-          curve: kAnimationCurve,
-          animationDuration: kAnimationDuration,
-          controller: _draggableMenuController,
-          ui: ClassicDraggableMenu(color: context.scheme.surfaceContainer),
-          levels: [
-            DraggableMenuLevel.ratio(ratio: 0.6),
-            DraggableMenuLevel.ratio(ratio: 1.0),
-          ],
-          child: DefaultTabController(
-            length: 4,
-            child: Column(
-              children: [
-                TabBar(
-                  tabs: [
-                    Tab(text: 'Filter'),
-                    Tab(text: 'Sort'),
-                    Tab(text: 'Display'),
-                    Tab(text: 'Tags'),
-                  ],
-                ),
-                Expanded(
-                  child: TabBarView(
-                    children: [
-                      FilterOptionsTab(),
-                      SortOptionsTab(),
-                      DisplayOptionsTab(),
-                      TagOptionsTab(),
+      DraggableMenu(
+        curve: kAnimationCurve,
+        animationDuration: kAnimationDuration,
+        controller: _draggableMenuController,
+        ui: ClassicDraggableMenu(color: context.scheme.surfaceContainer),
+        levels: [
+          DraggableMenuLevel.ratio(ratio: 0.6),
+          DraggableMenuLevel.ratio(ratio: 1.0),
+        ],
+        child: DefaultTabController(
+          length: 4,
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: TabBar(
+                      dividerColor: Colors.transparent,
+                      tabs: [
+                        Tab(text: 'Filter'),
+                        Tab(text: 'Sort'),
+                        Tab(text: 'Display'),
+                        Tab(text: 'Tags'),
+                      ],
+                    ),
+                  ),
+                  MenuAnchor(
+                    alignmentOffset: const Offset(-100, 0),
+                    builder: (context, controller, child) {
+                      return IconButton(
+                        icon: const Icon(Symbols.more_vert),
+                        onPressed: () {
+                          if (controller.isOpen) {
+                            controller.close();
+                          } else {
+                            controller.open();
+                          }
+                        },
+                      );
+                    },
+                    menuChildren: [
+                      MenuItemButton(
+                        child: Row(
+                          spacing: 12.0,
+                          children: [
+                            const Icon(Symbols.filter_list),
+                            const Text('Reset Filters'),
+                          ],
+                        ),
+                        onPressed: () {
+                          libraryPrefs.resetLibraryFilters();
+                        },
+                      ),
+                      MenuItemButton(
+                        child: Row(
+                          spacing: 12.0,
+                          children: [
+                            const Icon(Symbols.swap_vert),
+                            const Text('Reset Sort'),
+                          ],
+                        ),
+                        onPressed: () {
+                          libraryPrefs.resetLibrarySort();
+                        },
+                      ),
+                      MenuItemButton(
+                        child: Row(
+                          spacing: 12.0,
+                          children: [
+                            const Icon(Symbols.browse),
+                            const Text('Reset Display'),
+                          ],
+                        ),
+                        onPressed: () {
+                          libraryPrefs.resetLibraryDisplay();
+                        },
+                      ),
+                      const Divider(height: 1.0),
+                      MenuItemButton(
+                        style: TextButton.styleFrom(
+                          overlayColor: context.scheme.error.withValues(
+                            alpha: 0.1,
+                          ),
+                          foregroundColor: context.scheme.error,
+                        ),
+                        child: const Text('Reset ALL Preferences'),
+                        onPressed: () {
+                          libraryPrefs.resetAllLibraryPreferences();
+                        },
+                      ),
                     ],
                   ),
+                  const SizedBox(width: 4.0),
+                ],
+              ),
+              const Divider(height: 1.0),
+              Expanded(
+                child: TabBarView(
+                  children: [
+                    FilterOptionsTab(),
+                    SortOptionsTab(),
+                    DisplayOptionsTab(),
+                    TagOptionsTab(),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

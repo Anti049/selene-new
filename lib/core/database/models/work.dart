@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:selene/core/database/models/author.dart';
 import 'package:selene/core/database/models/chapter.dart';
+import 'package:selene/core/database/models/fandom.dart';
 import 'package:selene/core/database/models/series.dart';
 import 'package:selene/core/database/models/tag.dart';
 
@@ -29,6 +30,7 @@ class WorkModel with _$WorkModel {
     required String title,
     String? sourceURL,
     String? summary,
+    @Default([]) List<FandomModel> fandoms,
     int? wordCount,
     @Default(WorkStatus.unknown) WorkStatus status,
     String? coverURL,
@@ -46,6 +48,14 @@ class WorkModel with _$WorkModel {
     final title = 'Work ${random.nextInt(100)}';
     final sourceURL = 'https://example.com/work/${random.nextInt(100)}';
     final summary = 'This is a summary of the work.';
+    final fandoms = List.generate(
+      random.nextInt(3) + 1,
+      (_) => FandomModel(
+        name: 'Fandom ${random.nextInt(100)}',
+        sourceURL: 'https://example.com/fandom/${random.nextInt(100)}',
+        aliases: ['Alias ${random.nextInt(10)}'],
+      ),
+    );
     final wordCount = random.nextInt(1000);
     final status = WorkStatus.values[random.nextInt(WorkStatus.values.length)];
     final coverURL = 'https://example.com/cover/${random.nextInt(100)}.jpg';
@@ -94,6 +104,7 @@ class WorkModel with _$WorkModel {
       title: title,
       sourceURL: sourceURL,
       summary: summary,
+      fandoms: fandoms,
       wordCount: wordCount,
       status: status,
       coverURL: coverURL,
@@ -107,6 +118,13 @@ class WorkModel with _$WorkModel {
   }
 
   // --- Utilities ---
+  String get fandomNames {
+    if (fandoms.isEmpty) return 'Unknown Fandom';
+    final sortedFandoms =
+        fandoms.toList()..sort((a, b) => a.name.compareTo(b.name));
+    return sortedFandoms.map((f) => f.name).join(', ');
+  }
+
   String get authorNames {
     if (authors.isEmpty) return 'Unknown Author';
     return authors.map((a) => a.name).join(', ');

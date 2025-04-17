@@ -1,6 +1,7 @@
 import 'package:auto_route/annotations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:selene/core/utils/theming.dart';
 import 'package:selene/features/library/providers/library_preferences.dart';
 import 'package:selene/features/settings/models/searchable_setting_item.dart';
 
@@ -53,8 +54,10 @@ class FilterOptionsTab extends ConsumerWidget {
       shrinkWrap: true,
       physics: const BouncingScrollPhysics(),
       padding: EdgeInsets.zero,
-      children:
-          settings.map((setting) => setting.buildWidget(context)).toList(),
+      children: [
+        ...settings.map((setting) => setting.buildWidget(context)),
+        SizedBox(height: context.mediaQuery.systemGestureInsets.bottom),
+      ],
     );
   }
 }
