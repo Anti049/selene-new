@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:isar/isar.dart';
+import 'package:responsive_framework/responsive_framework.dart';
+import 'package:selene/core/constants/layout_constants.dart';
 import 'package:selene/core/database/providers/isar_provider.dart';
 import 'package:selene/core/logging/logger_provider.dart';
 import 'package:selene/core/theme/providers/theme_repository_provider.dart';
@@ -78,7 +80,10 @@ class MainApp extends ConsumerWidget {
         return SystemThemeBuilder(
           builder: (context, accent) {
             // Get current theme
-            final themeID = appearancePrefs.themeID.get() ?? 'system';
+            final themeID =
+                appearancePrefs.einkMode.get()
+                    ? 'monochrome'
+                    : appearancePrefs.themeID.get() ?? 'system';
             // Use async getThemeById if ThemeRepository uses async methods
             final activeTheme = themeRepository.getThemeByIdSync(
               themeID,
@@ -87,9 +92,20 @@ class MainApp extends ConsumerWidget {
             // Get current theme mode
             final themeMode = appearancePrefs.themeMode.get();
             final lightTheme =
-                activeTheme?.light() ?? ThemeData.light(useMaterial3: true);
+                activeTheme?.light(
+                  contrastLevel: appearancePrefs.contrastLevel.get(),
+                  blendLevel: appearancePrefs.blendLevel.get(),
+                  einkMode: appearancePrefs.einkMode.get(),
+                ) ??
+                ThemeData.light(useMaterial3: true);
             final darkTheme =
-                activeTheme?.dark() ?? ThemeData.dark(useMaterial3: true);
+                activeTheme?.dark(
+                  contrastLevel: appearancePrefs.contrastLevel.get(),
+                  blendLevel: appearancePrefs.blendLevel.get(),
+                  einkMode: appearancePrefs.einkMode.get(),
+                  usePureBlack: appearancePrefs.pureBlackMode.get(),
+                ) ??
+                ThemeData.dark(useMaterial3: true);
 
             return MaterialApp.router(
               title: 'Selene',
@@ -105,7 +121,20 @@ class MainApp extends ConsumerWidget {
                 final topMatch = delegate.currentConfiguration?.topMatch;
                 final showBanners = !_isFullScreen(topMatch);
 
-                return showBanners ? BannersContainer(child: child) : child;
+                return ResponsiveBreakpoints(
+                  breakpoints: [
+                    const Breakpoint(start: 0, end: 600, name: kCompact),
+                    const Breakpoint(start: 600, end: 839, name: kMedium),
+                    const Breakpoint(start: 840, end: 1199, name: kExpanded),
+                    const Breakpoint(start: 1200, end: 1599, name: kLarge),
+                    const Breakpoint(
+                      start: 1600,
+                      end: double.infinity,
+                      name: kExtraLarge,
+                    ),
+                  ],
+                  child: showBanners ? BannersContainer(child: child) : child,
+                );
               },
             );
           },

@@ -14,6 +14,7 @@ import 'package:selene/core/database/models/work.dart';
 import 'package:selene/core/database/providers/library_providers.dart';
 import 'package:selene/core/utils/theming.dart';
 import 'package:selene/features/banners/models/providers/banner_state_provider.dart';
+import 'package:selene/features/settings/screens/appearance/providers/appearance_preferences.dart';
 import 'package:selene/features/work_details/presentation/widgets/details_action_row.dart';
 import 'package:selene/features/work_details/presentation/widgets/details_tag_section.dart';
 import 'package:selene/features/work_details/presentation/widgets/expandable_text.dart';
@@ -257,6 +258,7 @@ class _WorkDetailsPageState extends ConsumerState<WorkDetailsPage> {
   Widget build(BuildContext context) {
     // Get providers
     final isTopBannerVisible = ref.watch(isTopBannerAreaCoveredProvider);
+    final appearancePrefs = ref.watch(appearancePreferencesProvider);
 
     // Return the main Scaffold widget
     final bottomPadding = 80.0 + context.mediaQuery.systemGestureInsets.bottom;
@@ -288,9 +290,11 @@ class _WorkDetailsPageState extends ConsumerState<WorkDetailsPage> {
                 },
               ),
               backgroundColor: ElevationOverlay.applySurfaceTint(
-                context.scheme.surfaceContainer,
-                context.scheme.surfaceTint,
-                8.0,
+                context.theme.appBarTheme.backgroundColor ??
+                    context.scheme.surface,
+                context.theme.appBarTheme.surfaceTintColor ??
+                    context.scheme.surfaceTint,
+                context.theme.appBarTheme.scrolledUnderElevation ?? 3.0,
               ).withValues(alpha: opacityValue),
               elevation: 0.0, // Keep these as needed
               scrolledUnderElevation: 0.0, // Keep these as needed
@@ -327,7 +331,8 @@ class _WorkDetailsPageState extends ConsumerState<WorkDetailsPage> {
               IntrinsicHeight(
                 child: Stack(
                   children: [
-                    _buildBackgroundGradient(context),
+                    if (!appearancePrefs.einkMode.get())
+                      _buildBackgroundGradient(context),
                     Padding(
                       padding: EdgeInsets.only(
                         top:

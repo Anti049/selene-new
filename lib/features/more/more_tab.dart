@@ -5,7 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:selene/common/widgets/themed_logo.dart';
 import 'package:selene/features/more/providers/more_preferences.dart';
-import 'package:selene/features/settings/models/searchable_setting_item.dart';
+import 'package:selene/features/settings/presentation/widgets/link_setting_widget.dart';
+import 'package:selene/features/settings/presentation/widgets/switch_setting_widget.dart';
 
 @RoutePage()
 class MoreTab extends ConsumerWidget {
@@ -13,9 +14,9 @@ class MoreTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final moreSettings = [
-      SearchableSettingItem.widget(
-        widget: Column(
+    return ListView(
+      children: [
+        Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Padding(
@@ -25,70 +26,62 @@ class MoreTab extends ConsumerWidget {
             const Divider(),
           ],
         ),
-      ),
-      SearchableSettingItem(
-        label: 'Downloaded Only',
-        subtitle: 'Show only downloaded items',
-        icon: Symbols.cloud_off,
-        type: SettingType.switchSetting,
-        preference: ref.watch(morePreferencesProvider).downloadedOnlyMode,
-      ),
-      SearchableSettingItem(
-        label: 'Incognito Mode',
-        subtitle: 'Pause reading history',
-        icon: CupertinoIcons.eyeglasses,
-        type: SettingType.switchSetting,
-        preference: ref.watch(morePreferencesProvider).incognitoMode,
-      ),
-      SearchableSettingItem.divider(),
-      SearchableSettingItem(
-        label: 'Download Queue',
-        icon: Symbols.download,
-        type: SettingType.linkSetting,
-        route: '/settings/downloads/download-queue',
-      ),
-      SearchableSettingItem(
-        label: 'Categories',
-        icon: Symbols.label,
-        type: SettingType.linkSetting,
-        route: '/settings/library/categories',
-      ),
-      SearchableSettingItem(
-        label: 'Statistics',
-        icon: Symbols.query_stats,
-        type: SettingType.linkSetting,
-        route: '/statistics',
-      ),
-      SearchableSettingItem(
-        label: 'Data & Storage',
-        icon: Symbols.storage,
-        type: SettingType.linkSetting,
-        route: '/settings/data-storage',
-      ),
-      SearchableSettingItem.divider(),
-      SearchableSettingItem(
-        label: 'Settings',
-        icon: Symbols.settings,
-        type: SettingType.linkSetting,
-        route: '/settings',
-      ),
-      SearchableSettingItem(
-        label: 'About',
-        icon: Symbols.info,
-        type: SettingType.linkSetting,
-        route: '/about',
-      ),
-      SearchableSettingItem(
-        label: 'Help',
-        icon: Symbols.help,
-        type: SettingType.linkSetting,
-        route: '/help',
-      ),
-    ];
-
-    return ListView(
-      children:
-          moreSettings.map((setting) => setting.buildWidget(context)).toList(),
+        SwitchSettingWidget(
+          label: 'Downloaded Only',
+          subtitle: 'Show only downloaded items',
+          icon: Symbols.cloud_off,
+          preference: ref.watch(morePreferencesProvider).downloadedOnlyMode,
+        ),
+        SwitchSettingWidget(
+          label: 'Incognito Mode',
+          subtitle: 'Pause reading history',
+          icon: CupertinoIcons.eyeglasses,
+          preference: ref.watch(morePreferencesProvider).incognitoMode,
+        ),
+        const Divider(),
+        LinkSettingWidget(
+          label: 'Download Queue',
+          icon: Symbols.download,
+          route: '/settings/downloads/download-queue',
+          enabled: false,
+        ),
+        LinkSettingWidget(
+          label: 'Categories',
+          icon: Symbols.label,
+          route: '/settings/library/categories',
+          enabled: false,
+        ),
+        LinkSettingWidget(
+          label: 'Statistics',
+          icon: Symbols.query_stats,
+          route: '/statistics',
+          enabled: false,
+        ),
+        LinkSettingWidget(
+          label: 'Data & Storage',
+          icon: Symbols.storage,
+          route: '/settings/data-storage',
+          enabled: false,
+        ),
+        const Divider(),
+        LinkSettingWidget(
+          label: 'Settings',
+          icon: Symbols.settings,
+          route: '/settings',
+        ),
+        LinkSettingWidget(
+          label: 'About',
+          icon: Symbols.info,
+          route: '/about',
+          enabled: false,
+        ),
+        LinkSettingWidget(
+          label: 'Help',
+          icon: Symbols.help,
+          route: '/help',
+          enabled: false,
+        ),
+      ],
     );
   }
 }

@@ -14,9 +14,9 @@ class BannersContainer extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final prefs = ref.watch(morePreferencesProvider);
-    final isDownloadedVisible = prefs.downloadedOnlyMode.get();
-    final isIncognitoVisible = prefs.incognitoMode.get();
+    final morePrefs = ref.watch(morePreferencesProvider);
+    final isDownloadedVisible = morePrefs.downloadedOnlyMode.get();
+    final isIncognitoVisible = morePrefs.incognitoMode.get();
     final isAnyBannerVisible = isDownloadedVisible || isIncognitoVisible;
 
     // Determine topmost status
@@ -47,7 +47,7 @@ class BannersContainer extends ConsumerWidget {
 
     final navBarStyle = FlexColorScheme.themedSystemNavigationBar(
       context,
-      systemNavBarStyle: FlexSystemNavBarStyle.navigationBar,
+      systemNavBarStyle: FlexSystemNavBarStyle.transparent,
       opacity: 0.5,
     );
 

@@ -22,6 +22,7 @@ class ThemeRepository {
             id: 'dynamic',
             name: 'Dynamic',
             primary: dynamicColor,
+            category: ThemeCategory.system,
           ).toIsar(),
         );
       }
@@ -37,6 +38,18 @@ class ThemeRepository {
 
   List<AppTheme> getAllThemesSync() {
     final themes = _isar.isarThemes.where().findAllSync();
+    return themes.map((theme) => theme.toModel()).toList();
+  }
+
+  Future<List<AppTheme>> getThemesByCategory(ThemeCategory category) async {
+    final themes =
+        await _isar.isarThemes.filter().categoryEqualTo(category).findAll();
+    return themes.map((theme) => theme.toModel()).toList();
+  }
+
+  List<AppTheme> getThemesByCategorySync(ThemeCategory category) {
+    final themes =
+        _isar.isarThemes.filter().categoryEqualTo(category).findAllSync();
     return themes.map((theme) => theme.toModel()).toList();
   }
 

@@ -44,5 +44,9 @@ class AppRouter extends RootStackRouter {
     AutoRoute(path: '/settings', page: SettingsRoute.page),
     // More -> Settings -> Subpages
     AutoRoute(path: '/settings/appearance', page: AppearanceRoute.page),
+    AutoRoute(
+      path: '/settings/appearance/theme-selection',
+      page: ThemeSelectionRoute.page,
+    ),
   ];
 }

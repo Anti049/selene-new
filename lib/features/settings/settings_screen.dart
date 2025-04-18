@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:selene/core/utils/theming.dart';
 import 'package:selene/features/banners/models/providers/banner_state_provider.dart';
-import 'package:selene/features/settings/models/searchable_setting_item.dart';
+import 'package:selene/features/settings/presentation/widgets/link_setting_widget.dart';
 import 'package:selene/features/settings/providers/settings_providers.dart';
 
 @RoutePage()
@@ -117,92 +117,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Widget build(BuildContext context) {
     // Get providers
     final bool isTopBannerVisible = ref.watch(isTopBannerAreaCoveredProvider);
-    final settings = [
-      SearchableSettingItem.link(
-        label: 'Appearance',
-        subtitle: 'Theme, font, language, and more',
-        icon: Symbols.palette,
-        route: '/settings/appearance',
-      ),
-      // Library
-      SearchableSettingItem.link(
-        label: 'Library',
-        subtitle: 'Categories, global updates, chapter swipe',
-        icon: Symbols.book,
-        route: '/settings/library',
-      ),
-      // Accounts
-      SearchableSettingItem.link(
-        label: 'Accounts',
-        subtitle: 'Manage accounts, login/logout, and sync',
-        icon: Symbols.group,
-        route: '/settings/accounts',
-      ),
-      // Reader
-      SearchableSettingItem.link(
-        label: 'Reader',
-        subtitle: 'Reader settings, page transitions, and more',
-        icon: Symbols.chrome_reader_mode,
-        route: '/settings/reader',
-      ),
-      // Downloads
-      SearchableSettingItem.link(
-        label: 'Downloads',
-        subtitle: 'Download settings, queue, history',
-        icon: Symbols.file_download,
-        route: '/settings/downloads',
-      ),
-      // Tracking
-      SearchableSettingItem.link(
-        label: 'Tracking',
-        subtitle: 'Tracking settings, history, statistics',
-        icon: Symbols.sync,
-        route: '/settings/tracking',
-      ),
-      // Browse
-      SearchableSettingItem.link(
-        label: 'Browse',
-        subtitle: 'Browse settings, sources, extensions',
-        icon: Symbols.explore,
-        route: '/settings/browse',
-      ),
-      // Notifications
-      SearchableSettingItem.link(
-        label: 'Notifications',
-        subtitle: 'Notification settings, sounds, and more',
-        icon: Symbols.notifications,
-        route: '/settings/notifications',
-      ),
-      // Data & Storage
-      SearchableSettingItem.link(
-        label: 'Data & Storage',
-        subtitle: 'Manage data, storage, and cache settings',
-        icon: Symbols.storage,
-        route: '/settings/data-storage',
-      ),
-      // Security & Privacy
-      SearchableSettingItem.link(
-        label: 'Security & Privacy',
-        subtitle: 'Security settings, incognito mode, and more',
-        icon: Symbols.security,
-        route: '/settings/security',
-      ),
-      // Advanced
-      SearchableSettingItem.link(
-        label: 'Advanced',
-        subtitle: 'Developer options, experimental features',
-        icon: Symbols.developer_mode,
-        route: '/settings/advanced',
-      ),
-      // About
-      SearchableSettingItem.link(
-        label: 'About',
-        subtitle: 'Selene Stable 0.1.0',
-        icon: Symbols.info,
-        route: '/about',
-      ),
-    ];
 
+    // Build the settings screen
     return Scaffold(
       primary: !isTopBannerVisible,
       appBar: AppBar(
@@ -211,8 +127,91 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         actions: [_searchButton(context)],
       ),
       body: ListView(
-        children:
-            settings.map((setting) => setting.buildWidget(context)).toList(),
+        children: [
+          LinkSettingWidget(
+            label: 'Appearance',
+            subtitle: 'Theme, font, language, and more',
+            icon: Symbols.palette,
+            route: '/settings/appearance',
+          ),
+          LinkSettingWidget(
+            label: 'Library',
+            subtitle: 'Categories, global updates, chapter swipe',
+            icon: Symbols.book,
+            route: '/settings/library',
+            enabled: false,
+          ),
+          LinkSettingWidget(
+            label: 'Accounts',
+            subtitle: 'Manage accounts, login/logout, and sync',
+            icon: Symbols.group,
+            route: '/settings/accounts',
+            enabled: false,
+          ),
+          LinkSettingWidget(
+            label: 'Reader',
+            subtitle: 'Reader settings, page transitions, and more',
+            icon: Symbols.chrome_reader_mode,
+            route: '/settings/reader',
+            enabled: false,
+          ),
+          LinkSettingWidget(
+            label: 'Downloads',
+            subtitle: 'Download settings, queue, history',
+            icon: Symbols.file_download,
+            route: '/settings/downloads',
+            enabled: false,
+          ),
+          LinkSettingWidget(
+            label: 'Tracking',
+            subtitle: 'Tracking settings, history, statistics',
+            icon: Symbols.sync,
+            route: '/settings/tracking',
+            enabled: false,
+          ),
+          LinkSettingWidget(
+            label: 'Browse',
+            subtitle: 'Browse settings, sources, extensions',
+            icon: Symbols.explore,
+            route: '/settings/browse',
+            enabled: false,
+          ),
+          LinkSettingWidget(
+            label: 'Notifications',
+            subtitle: 'Notification settings, sounds, and more',
+            icon: Symbols.notifications,
+            route: '/settings/notifications',
+            enabled: false,
+          ),
+          LinkSettingWidget(
+            label: 'Data & Storage',
+            subtitle: 'Manage data, storage, and cache settings',
+            icon: Symbols.storage,
+            route: '/settings/data-storage',
+            enabled: false,
+          ),
+          LinkSettingWidget(
+            label: 'Security & Privacy',
+            subtitle: 'Security settings, incognito mode, and more',
+            icon: Symbols.security,
+            route: '/settings/security',
+            enabled: false,
+          ),
+          LinkSettingWidget(
+            label: 'Advanced',
+            subtitle: 'Developer options, experimental features',
+            icon: Symbols.developer_mode,
+            route: '/settings/advanced',
+            enabled: false,
+          ),
+          LinkSettingWidget(
+            label: 'About',
+            subtitle: 'Selene Stable 0.1.0',
+            icon: Symbols.info,
+            route: '/about',
+            enabled: false,
+          ),
+        ],
       ),
     );
   }

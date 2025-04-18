@@ -1,6 +1,8 @@
+import 'package:change_case/change_case.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:isar/isar.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:selene/core/constants/preference_constants.dart';
 import 'package:selene/core/database/models/preference.dart';
@@ -73,6 +75,8 @@ AppearancePreferences appearancePreferences(Ref ref) {
 
 @riverpod
 List<SearchableSettingItem> appearanceSettings(Ref ref) {
+  final route = '/settings/appearance';
+  final appearancePrefs = ref.watch(appearancePreferencesProvider);
   return [
     SearchableSettingItem.group(
       label: 'Theme',
@@ -80,11 +84,55 @@ List<SearchableSettingItem> appearanceSettings(Ref ref) {
         SearchableSettingItem(
           label: 'Theme Mode',
           type: SettingType.segmentedSetting,
-          preference: ref.watch(appearancePreferencesProvider).themeMode,
+          preference: appearancePrefs.themeMode,
           options: ThemeMode.values,
-          route: '/settings/appearance?section=theme',
+          route: route,
           breadcrumbs: ['Appearance', 'Theme'],
           keywords: ['theme', 'mode'],
+        ),
+        SearchableSettingItem(
+          label: 'Theme Selection',
+          subtitle: appearancePrefs.themeID.get()?.toTitleCase() ?? 'System',
+          type: SettingType.linkSetting,
+          icon: Symbols.palette,
+          route: '$route/theme-selection',
+          breadcrumbs: ['Appearance', 'Theme'],
+          keywords: ['theme', 'selection'],
+        ),
+        SearchableSettingItem(
+          label: 'Contrast Level',
+          type: SettingType.sliderSetting,
+          preference: appearancePrefs.contrastLevel,
+          min: -1.0,
+          max: 1.0,
+          divisions: 4,
+          route: route,
+          breadcrumbs: ['Appearance', 'Theme'],
+          keywords: ['contrast', 'level'],
+          enabled: !appearancePrefs.einkMode.get(),
+        ),
+        SearchableSettingItem(
+          label: 'E-Ink Mode',
+          subtitle: 'Use eink mode for better readability',
+          icon: Symbols.filter_b_and_w,
+          type: SettingType.switchSetting,
+          preference: appearancePrefs.einkMode,
+          route: route,
+          breadcrumbs: ['Appearance', 'Theme'],
+          keywords: ['eink', 'mode'],
+        ),
+        SearchableSettingItem(
+          label: 'Pure Black Mode',
+          subtitle: 'Use pure black background for dark mode',
+          icon: Symbols.contrast,
+          type: SettingType.switchSetting,
+          preference: appearancePrefs.pureBlackMode,
+          route: route,
+          breadcrumbs: ['Appearance', 'Theme'],
+          keywords: ['pure', 'black', 'mode'],
+          enabled:
+              !appearancePrefs.einkMode.get() &&
+              appearancePrefs.themeMode.get() != ThemeMode.light,
         ),
       ],
     ),

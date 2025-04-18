@@ -7,6 +7,7 @@ import 'package:selene/features/settings/presentation/widgets/checkbox_setting_w
 import 'package:selene/features/settings/presentation/widgets/link_setting_widget.dart';
 import 'package:selene/features/settings/presentation/widgets/segmented_setting_widget.dart';
 import 'package:selene/features/settings/presentation/widgets/settings_group_widget.dart';
+import 'package:selene/features/settings/presentation/widgets/slider_setting_widget.dart';
 import 'package:selene/features/settings/presentation/widgets/switch_setting_widget.dart';
 
 part 'searchable_setting_item.freezed.dart';
@@ -42,6 +43,11 @@ class SearchableSettingItem with _$SearchableSettingItem {
     Function()? onTapAction,
     List<Enum>? options,
     List<SearchableSettingItem>? children,
+    @Default(true) bool enabled,
+    @Default(false) bool dense,
+    @Default(0.0) double min,
+    @Default(1.0) double max,
+    int? divisions,
   }) = _SearchableSettingItem;
 
   factory SearchableSettingItem.link({
@@ -81,7 +87,13 @@ class SearchableSettingItem with _$SearchableSettingItem {
   Widget buildWidget(BuildContext context) {
     switch (type) {
       case SettingType.switchSetting:
-        return SwitchSettingWidget(setting: this);
+        return SwitchSettingWidget(
+          label: label,
+          subtitle: subtitle,
+          icon: icon,
+          preference: preference as Preference<bool>,
+          enabled: enabled,
+        );
       case SettingType.checkboxSetting:
         return CheckboxSettingWidget(
           label: label,
@@ -89,27 +101,52 @@ class SearchableSettingItem with _$SearchableSettingItem {
           icon: icon,
           preference: preference!,
           checkboxPosition: CheckboxPosition.leading,
-          enabled:
-              true, // Assuming enabled is always true for checkbox settings
+          enabled: enabled,
+          dense: dense,
         );
-      // case SettingType.sliderSetting:
-      //   return SliderSettingWidget(setting: this);
+      case SettingType.sliderSetting:
+        return SliderSettingWidget(
+          label: label,
+          icon: icon,
+          preference: preference as Preference<double>,
+          min: min,
+          max: max,
+          divisions: divisions,
+          enabled: enabled,
+        );
       case SettingType.segmentedSetting:
-        return SegmentedSettingWidget(setting: this);
+        return SegmentedSettingWidget(
+          values: options ?? const [],
+          preference: preference as Preference<Enum>,
+        );
       // case SettingType.dropdownSetting:
       //   return DropdownSettingWidget(setting: this);
       // case SettingType.textSetting:
       //   return TextSettingWidget(setting: this);
       case SettingType.buttonSetting:
-        return ButtonSettingWidget(setting: this);
+        return ButtonSettingWidget(
+          label: label,
+          subtitle: subtitle,
+          icon: icon,
+          onTap: onTapAction ?? () {},
+        );
       case SettingType.linkSetting:
-        return LinkSettingWidget(setting: this);
+        return LinkSettingWidget(
+          label: label,
+          subtitle: subtitle,
+          icon: icon,
+          route: route ?? '',
+        );
       case SettingType.widgetSetting:
         return widget ?? const SizedBox.shrink();
       case SettingType.dividerSetting:
         return const Divider();
       case SettingType.groupSetting:
-        return SettingsGroupWidget(setting: this);
+        return SettingsGroupWidget(
+          label: label,
+          icon: icon,
+          children: children ?? const [],
+        );
       default:
         throw Exception('Unknown setting type: $type');
     }

@@ -5,7 +5,7 @@ import 'package:selene/core/theme/models/app_theme.dart';
 final themeGaziter = AppTheme(
   id: 'gaziter',
   name: 'Gaziter',
-  category: ThemeCategory.system,
+  category: ThemeCategory.custom,
   primary: Color(0xFF48F7BD),
   secondary: Color(0xFFC193FF),
   tertiary: Color(0xFF54A5B6),

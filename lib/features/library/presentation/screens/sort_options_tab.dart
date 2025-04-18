@@ -6,6 +6,7 @@ import 'package:selene/core/database/models/preference.dart';
 import 'package:selene/core/utils/enums.dart';
 import 'package:selene/core/utils/theming.dart';
 import 'package:selene/features/library/providers/library_preferences.dart';
+import 'package:selene/features/settings/presentation/widgets/button_setting_widget.dart';
 
 @RoutePage()
 class SortOptionsTab extends ConsumerWidget {
@@ -24,16 +25,14 @@ class SortOptionsTab extends ConsumerWidget {
       padding: EdgeInsets.zero,
       children: [
         ...SortBy.values.map((sortBy) {
-          return ListTile(
-            title: Text(sortBy.label),
-            leading: Icon(
-              libraryPrefs.sortBy.get() == sortBy
-                  ? libraryPrefs.sortOrder.get() == SortOrder.ascending
-                      ? Symbols.arrow_upward
-                      : Symbols.arrow_downward
-                  : null,
-              color: context.scheme.primary,
-            ),
+          return ButtonSettingWidget(
+            label: sortBy.label,
+            icon:
+                libraryPrefs.sortBy.get() == sortBy
+                    ? libraryPrefs.sortOrder.get() == SortOrder.ascending
+                        ? Symbols.arrow_upward
+                        : Symbols.arrow_downward
+                    : null,
             onTap: () {
               if (libraryPrefs.sortBy.get() == sortBy) {
                 libraryPrefs.sortOrder.cycle(SortOrder.values);

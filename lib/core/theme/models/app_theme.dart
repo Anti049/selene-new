@@ -1,6 +1,7 @@
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/material.dart' hide Theme;
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:selene/core/constants/animation_constants.dart';
 import 'package:selene/core/database/tables/app_themes_table.dart';
 import 'package:selene/core/utils/converters.dart';
 
@@ -9,11 +10,11 @@ part 'app_theme.g.dart';
 
 enum ThemeCategory {
   system('System'),
-  custom('Custom'),
   site('Sites'),
   tachiyomi('Tachiyomi'),
   flex('Flex Color Schemes'),
-  hsr('Honkai: Star Rail');
+  hsr('Honkai: Star Rail'),
+  custom('Custom');
 
   const ThemeCategory(this.name);
 
@@ -93,24 +94,55 @@ abstract class AppTheme with _$AppTheme {
       useMaterial3: true,
       colorScheme: colorScheme,
       variant: variant ?? variant,
-      surfaceMode: einkMode ? FlexSurfaceMode.level : FlexSurfaceMode.level,
+      surfaceMode: FlexSurfaceMode.level,
       blendLevel: blend,
       appBarStyle: FlexAppBarStyle.scaffoldBackground,
       subThemesData: FlexSubThemesData(
         interactionEffects: true,
-        blendOnLevel: 10,
-        thinBorderWidth: 2.0,
-        bottomNavigationBarBackgroundSchemeColor: SchemeColor.surfaceContainer,
-        bottomAppBarSchemeColor: SchemeColor.surfaceContainer,
-        inputDecoratorRadius: 24.0,
-        chipRadius: 24.0,
-        dialogBackgroundSchemeColor: SchemeColor.surface,
-        checkboxSchemeColor: SchemeColor.onSurface,
-        textButtonRadius: 8.0,
-        filledButtonRadius: 8.0,
-        elevatedButtonRadius: 8.0,
-        outlinedButtonRadius: 8.0,
+        tintedDisabledControls: true,
+        textButtonRadius: 4.0,
+        filledButtonRadius: 6.0,
+        elevatedButtonRadius: 6.0,
+        outlinedButtonRadius: 6.0,
+        outlinedButtonPressedBorderWidth: 2.0,
+        toggleButtonsRadius: 4.0,
+        segmentedButtonRadius: 6.0,
+        sliderValueIndicatorType: FlexSliderIndicatorType.rectangular,
+        inputDecoratorIsFilled: true,
+        inputDecoratorBorderType: FlexInputBorderType.outline,
+        inputDecoratorRadius: 6.0,
+        fabUseShape: true,
+        fabRadius: 6.0,
+        chipRadius: 6.0,
+        cardRadius: 6.0,
+        popupMenuRadius: 4.0,
+        alignedDropdown: true,
+        tooltipRadius: 4,
+        tooltipWaitDuration: kAnimationDuration,
+        tooltipSchemeColor: SchemeColor.surfaceContainerHighest,
+        tooltipOpacity: null,
         dialogRadius: 8.0,
+        timePickerElementRadius: 6.0,
+        drawerRadius: 8.0,
+        drawerIndicatorRadius: 6.0,
+        bottomSheetRadius: 8.0,
+        bottomNavigationBarBackgroundSchemeColor:
+            einkMode
+                ? SchemeColor.surfaceContainerLowest
+                : SchemeColor.surfaceContainer,
+        searchBarRadius: 6.0,
+        searchViewRadius: 6.0,
+        navigationBarIndicatorRadius: 6.0,
+        navigationRailUseIndicator: true,
+        navigationRailIndicatorRadius: 6.0,
+        appBarBackgroundSchemeColor:
+            einkMode ? SchemeColor.white : SchemeColor.surface,
+        bottomAppBarSchemeColor:
+            einkMode
+                ? SchemeColor.surfaceContainerLowest
+                : SchemeColor.surfaceContainer,
+        snackBarBackgroundSchemeColor: SchemeColor.inverseSurface,
+        snackBarActionSchemeColor: SchemeColor.inversePrimary,
       ),
       useMaterial3ErrorColors: true,
       visualDensity: FlexColorScheme.comfortablePlatformDensity,
@@ -145,35 +177,48 @@ abstract class AppTheme with _$AppTheme {
       appBarStyle: FlexAppBarStyle.scaffoldBackground,
       subThemesData: FlexSubThemesData(
         interactionEffects: true,
-        blendOnLevel: 10,
-        thinBorderWidth: 2.0,
-        // unselectedToggleIsColored: true,
-        // appBarBackgroundSchemeColor:
-        //     usePureBlack || einkMode ? SchemeColor.black : null,
-        appBarBackgroundSchemeColor: SchemeColor.surfaceContainer,
+        tintedDisabledControls: true,
+        textButtonRadius: 4.0,
+        filledButtonRadius: 6.0,
+        elevatedButtonRadius: 6.0,
+        outlinedButtonRadius: 6.0,
+        outlinedButtonPressedBorderWidth: 2.0,
+        toggleButtonsRadius: 4.0,
+        segmentedButtonRadius: 6.0,
+        sliderValueIndicatorType: FlexSliderIndicatorType.rectangular,
+        inputDecoratorIsFilled: true,
+        inputDecoratorBorderType: FlexInputBorderType.outline,
+        inputDecoratorRadius: 6.0,
+        fabUseShape: true,
+        fabRadius: 6.0,
+        chipRadius: 6.0,
+        cardRadius: 6.0,
+        popupMenuRadius: 4.0,
+        alignedDropdown: true,
+        tooltipRadius: 4,
+        tooltipWaitDuration: kAnimationDuration,
+        tooltipSchemeColor: SchemeColor.surfaceContainerHighest,
+        tooltipOpacity: null,
+        dialogRadius: 8.0,
+        timePickerElementRadius: 6.0,
+        drawerRadius: 8.0,
+        drawerIndicatorRadius: 6.0,
+        bottomSheetRadius: 8.0,
         bottomNavigationBarBackgroundSchemeColor:
             usePureBlack || einkMode
-                ? SchemeColor.surfaceDim
+                ? SchemeColor.surfaceContainerLowest
                 : SchemeColor.surfaceContainer,
+        searchBarRadius: 6.0,
+        searchViewRadius: 6.0,
+        navigationBarIndicatorRadius: 6.0,
+        navigationRailUseIndicator: true,
+        navigationRailIndicatorRadius: 6.0,
+        appBarBackgroundSchemeColor:
+            usePureBlack || einkMode ? SchemeColor.black : SchemeColor.surface,
         bottomAppBarSchemeColor:
             usePureBlack || einkMode
-                ? SchemeColor.surfaceDim
+                ? SchemeColor.surfaceContainerLowest
                 : SchemeColor.surfaceContainer,
-        bottomNavigationBarElevation: 8.0,
-        menuPadding: EdgeInsets.all(0.0),
-        menuSchemeColor: SchemeColor.surfaceContainerHigh,
-        inputDecoratorRadius: 24.0,
-        // Chips
-        chipRadius: 8.0,
-        dialogBackgroundSchemeColor: SchemeColor.surface,
-        checkboxSchemeColor: SchemeColor.onSurface,
-        textButtonRadius: 8.0,
-        filledButtonRadius: 8.0,
-        elevatedButtonRadius: 8.0,
-        outlinedButtonRadius: 8.0,
-        dialogRadius: 8.0,
-        fabRadius: 8.0,
-        fabUseShape: true,
         snackBarBackgroundSchemeColor: SchemeColor.inverseSurface,
         snackBarActionSchemeColor: SchemeColor.inversePrimary,
       ),

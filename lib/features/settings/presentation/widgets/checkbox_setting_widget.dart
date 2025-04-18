@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:selene/core/database/models/preference.dart';
 import 'package:selene/core/utils/enums.dart';
 import 'package:selene/core/utils/theming.dart';
+import 'package:selene/features/settings/presentation/widgets/base_setting_widget.dart';
 
 enum CheckboxPosition { leading, trailing }
 
@@ -74,6 +75,15 @@ class CheckboxSettingWidget extends StatelessWidget {
     }
   }
 
+  Widget _buildCheckbox(BuildContext context) {
+    return Checkbox(
+      value: value,
+      onChanged: enabled ? updateValue : null,
+      tristate: preference is Preference<TriState>,
+      activeColor: getColor(context),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     // Assert this setting is a checkbox setting
@@ -81,34 +91,21 @@ class CheckboxSettingWidget extends StatelessWidget {
       preference is Preference<bool> || preference is Preference<TriState>,
     );
 
-    return ListTile(
+    return BaseSettingWidget(
+      title: label,
+      subtitle: subtitle,
+      icon: icon,
       leading:
           checkboxPosition == CheckboxPosition.leading
-              ? Checkbox(
-                value: value,
-                onChanged: updateValue,
-                tristate: preference is Preference<TriState>,
-                activeColor: getColor(context),
-              )
-              : Icon(icon, color: context.scheme.primary),
-      title: Text(label, style: context.text.bodyLarge),
-      subtitle:
-          subtitle != null
-              ? Text(subtitle!, style: context.text.bodySmall)
+              ? _buildCheckbox(context)
               : null,
       trailing:
           checkboxPosition == CheckboxPosition.trailing
-              ? Checkbox(
-                value: value,
-                onChanged: updateValue,
-                tristate: preference is Preference<TriState>,
-                activeColor: getColor(context),
-              )
-              : Icon(icon, color: context.scheme.primary),
-      onTap: cycleValue,
+              ? _buildCheckbox(context)
+              : null,
       enabled: enabled,
       dense: dense,
-      // horizontalTitleGap: 24.0,
+      onTap: cycleValue,
     );
   }
 }
