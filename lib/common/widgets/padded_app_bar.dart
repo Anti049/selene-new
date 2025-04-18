@@ -17,6 +17,7 @@ class PaddedAppBar extends ConsumerWidget implements PreferredSizeWidget {
     this.bottom,
     this.primary = true,
     this.backgroundColor,
+    this.foregroundColor,
     this.visible,
     this.elevated = false,
   });
@@ -29,6 +30,7 @@ class PaddedAppBar extends ConsumerWidget implements PreferredSizeWidget {
   final bool primary;
   final MenuController _menuController = MenuController();
   final Color? backgroundColor;
+  final Color? foregroundColor;
   final bool? visible;
   final bool elevated;
 
@@ -82,6 +84,7 @@ class PaddedAppBar extends ConsumerWidget implements PreferredSizeWidget {
       child: AppBar(
         primary: !isTopBannerVisible,
         backgroundColor: backgroundColor,
+        foregroundColor: foregroundColor,
         elevation: elevated ? 8.0 : null,
         scrolledUnderElevation: elevated ? 8.0 : 4.0,
         title:

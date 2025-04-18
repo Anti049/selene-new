@@ -58,7 +58,7 @@ class WorkModel with _$WorkModel {
     );
     final wordCount = random.nextInt(1000);
     final status = WorkStatus.values[random.nextInt(WorkStatus.values.length)];
-    final coverURL = 'https://example.com/cover/${random.nextInt(100)}.jpg';
+    final coverURL = 'https://placehold.co/900x1200.png';
     final datePublished = DateTime.now().subtract(
       Duration(days: random.nextInt(365)),
     );
