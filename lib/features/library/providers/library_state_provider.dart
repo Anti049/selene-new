@@ -2,7 +2,7 @@ import 'dart:math';
 
 import 'package:dartx/dartx.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:rxdart/rxdart.dart' hide DebounceExtensions;
+import 'package:rxdart/rxdart.dart';
 import 'package:selene/core/database/mappers/work_mapper.dart';
 import 'package:selene/core/database/models/work.dart';
 import 'package:selene/core/database/providers/isar_provider.dart';
@@ -14,7 +14,6 @@ import 'package:selene/features/library/models/library_item_preferences.dart';
 import 'package:selene/features/library/models/library_state.dart';
 import 'package:selene/features/library/providers/library_preferences.dart';
 import 'package:selene/features/more/providers/more_preferences.dart';
-import 'package:stream_transform/stream_transform.dart' hide Concatenate;
 
 part 'library_state_provider.g.dart';
 
@@ -31,85 +30,71 @@ class LibraryState extends _$LibraryState {
       libraryPreferencesProvider.select((prefs) => prefs.sortOrder.get()),
     );
 
-    return Rx.combineLatest3(
+    return Rx.combineLatestList([
       _libraryItemsStream(sortBy, sortOrder),
       _preferencesStream(),
-      _searchQueryStream().distinct().debounce(
+      _searchQueryStream().distinct().debounceTime(
         const Duration(milliseconds: 300),
       ),
-      (libraryItems, filterPrefs, searchQuery) {
-        // --- Filtering Logic ---
-        // Filter by search query
-        final queriedLibraryItems =
-            searchQuery != null && searchQuery.isNotEmpty
-                ? libraryItems.where((item) {
-                  final search = searchQuery.toLowerCase();
-                  if (item.work.title.toLowerCase().contains(search)) {
-                    return true;
-                  }
-                  if (item.work.authors.any(
-                    (a) => a.name.toLowerCase().contains(search),
-                  )) {
-                    return true;
-                  }
-                  // Add other searchable fields (tags, series, etc.)
-                  return false;
-                }).toList()
-                : libraryItems;
+    ]).asyncMap((data) async {
+      final libraryItems = data[0] as List<LibraryItem>;
+      final filterPrefs = data[1] as LibraryItemPreferences;
+      final searchQuery = data[2] as String?;
+      // --- Filtering Logic ---
+      // Filter by search query
+      final queriedLibraryItems =
+          searchQuery != null && searchQuery.isNotEmpty
+              ? libraryItems.where((item) {
+                final search = searchQuery.toLowerCase();
+                if (item.work.title.toLowerCase().contains(search)) {
+                  return true;
+                }
+                if (item.work.authors.any(
+                  (a) => a.name.toLowerCase().contains(search),
+                )) {
+                  return true;
+                }
+                // Add other searchable fields (tags, series, etc.)
+                return false;
+              }).toList()
+              : libraryItems;
 
-        // Filter by preferences (adapt your logic here)
-        final filteredLibraryItems =
-            queriedLibraryItems.where((item) {
-              if (filterPrefs.downloadedOnlyMode ==
-                  true /* && !item.isDownloaded*/ ) {
-                // return false;
-              }
-              // Example: Filter Unread (from Library Prefs)
-              if (filterPrefs.filterUnread ==
-                  true /* && item.unreadCount <= 0*/ ) {
-                // return false;
-              }
-              // Add other filters: filterDownloaded, filterFavorite, filterStarted, etc.
-              return true;
-            }).toList();
-        // --- End Filtering Logic ---
+      // Filter by preferences (adapt your logic here)
+      final filteredLibraryItems =
+          queriedLibraryItems.where((item) {
+            if (filterPrefs.downloadedOnlyMode ==
+                true /* && !item.isDownloaded*/ ) {
+              // return false;
+            }
+            // Example: Filter Unread (from Library Prefs)
+            if (filterPrefs.filterUnread ==
+                true /* && item.unreadCount <= 0*/ ) {
+              // return false;
+            }
+            // Add other filters: filterDownloaded, filterFavorite, filterStarted, etc.
+            return true;
+          }).toList();
+      // --- End Filtering Logic ---
 
-        // Preserve selection state
-        final currentSelectedItems = state.valueOrNull?.selectedItems ?? [];
-        final validSelectedItems =
-            currentSelectedItems
-                .where(
-                  (selected) => filteredLibraryItems.any(
-                    (item) => item.itemID == selected.itemID,
-                  ),
-                )
-                .toList();
+      // Preserve selection state
+      final currentSelectedItems = state.valueOrNull?.selectedItems ?? [];
+      final validSelectedItems =
+          currentSelectedItems
+              .where(
+                (selected) => filteredLibraryItems.any(
+                  (item) => item.itemID == selected.itemID,
+                ),
+              )
+              .toList();
 
-        final hasActiveFilters = filterPrefs.hasActiveFilters;
-        final hasActiveSearch = searchQuery.isNotNullOrEmpty;
+      final hasActiveFilters = filterPrefs.hasActiveFilters;
+      final hasActiveSearch = searchQuery.isNotNullOrEmpty;
 
-        return LibraryStateModel(
-          items: filteredLibraryItems,
-          searchQuery: searchQuery,
-          selectedItems: validSelectedItems,
-          hasActiveFilters: hasActiveFilters || hasActiveSearch,
-        );
-      },
-    ).handleError((error, stackTrace) {
-      // Add error handling for the combined stream
-      logger.e(
-        "Error in combined LibraryState stream: $error",
-        stackTrace: stackTrace,
-      );
-      // Re-throw or return a default/error state model
-      // For now, rethrowing might be okay if the UI handles AsyncError
-      // throw error;
-      // Or return a default state:
       return LibraryStateModel(
-        items: [],
-        searchQuery: null, // Keep search query if possible
-        selectedItems: [],
-        hasActiveFilters: false, // Reset filters on error
+        items: filteredLibraryItems,
+        searchQuery: searchQuery,
+        selectedItems: validSelectedItems,
+        hasActiveFilters: hasActiveFilters || hasActiveSearch,
       );
     });
   }
@@ -318,27 +303,30 @@ class LibraryState extends _$LibraryState {
 
   // --- Search Utilities ---
   Stream<String?> _searchQueryStream() async* {
-    // Yield the current search query immediately if available
-    final currentQuery = state.valueOrNull?.searchQuery;
-    if (currentQuery != null) {
-      yield currentQuery;
-    }
     yield state.valueOrNull?.searchQuery; // Keep the original simpler version
   }
 
-  // Start searching
+  void search(String? query) async {
+    final previousState = state.valueOrNull;
+    if (previousState != null) {
+      final newState = previousState.copyWith(searchQuery: query);
+      state = await AsyncValue.guard(() async => newState);
+    }
+  }
+
   void startSearching() {
-    _updateState((state) => state.copyWith(searchQuery: ''));
+    search('');
+    refresh(); // Ensure the state is refreshed to show search results
   }
 
-  // Stop searching
   void stopSearching() {
-    _updateState((state) => state.copyWith(searchQuery: null));
+    search(null);
+    refresh(); // Ensure the state is refreshed to show search results
   }
 
-  // Update search query
   void updateSearchQuery(String query) {
-    _updateState((state) => state.copyWith(searchQuery: query));
+    search(query);
+    refresh(); // Ensure the state is refreshed to show search results
   }
 
   // --- Selection Utilities ---
