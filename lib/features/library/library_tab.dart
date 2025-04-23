@@ -9,17 +9,17 @@ import 'package:selene/common/widgets/intent_frame.dart';
 import 'package:selene/common/widgets/padded_app_bar.dart';
 import 'package:selene/core/constants/animation_constants.dart';
 import 'package:selene/core/database/models/preference.dart';
-import 'package:selene/core/database/models/work.dart';
 import 'package:selene/core/database/providers/library_providers.dart';
 import 'package:selene/core/utils/enums.dart';
 import 'package:selene/core/utils/theming.dart';
-import 'package:selene/features/banners/models/providers/banner_state_provider.dart';
+import 'package:selene/features/banners/providers/banner_state_provider.dart';
 import 'package:selene/features/library/models/library_item.dart';
 import 'package:selene/features/library/models/library_state.dart';
 import 'package:selene/features/library/presentation/screens/display_options_tab.dart';
 import 'package:selene/features/library/presentation/screens/filter_options_tab.dart';
 import 'package:selene/features/library/presentation/screens/sort_options_tab.dart';
 import 'package:selene/features/library/presentation/screens/tag_options_tab.dart';
+import 'package:selene/features/library/presentation/widgets/add_work_dialog.dart';
 import 'package:selene/features/library/presentation/widgets/library_component_item.dart';
 import 'package:selene/features/library/providers/library_preferences.dart';
 import 'package:selene/features/library/providers/library_state_provider.dart';
@@ -340,7 +340,7 @@ class _LibraryTabState extends ConsumerState<LibraryTab>
                 final selectedWorks =
                     selectedItems.map((e) => e.itemID).toList();
                 for (final workID in selectedWorks) {
-                  await worksRepository.deleteWorkById(workID);
+                  await worksRepository.deleteWorkByID(workID);
                 }
                 // _refreshKey.currentState?.show();
               },
@@ -476,54 +476,49 @@ class _LibraryTabState extends ConsumerState<LibraryTab>
   ) {
     // Get prefs provider once
     final libraryPrefs = ref.read(libraryPreferencesProvider);
-    final worksRepo = ref.read(worksRepositoryProvider); // Use read for actions
 
-    return Column(
+    return Row(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.end, // Align to end
       spacing: 8.0,
       children: [
         FloatingActionButton(
           heroTag: 'fab_continue_reading', // Unique HeroTag
-          tooltip:
-              'Toggle Continue Reading Button Visibility', // Example tooltip
-          foregroundColor: context.scheme.onTertiaryContainer,
-          backgroundColor: context.scheme.tertiaryContainer,
-          splashColor: context.scheme.onTertiaryContainer.withValues(
-            alpha: 0.1,
-          ),
-          onPressed: () {
-            // Toggle the specific preference using read
-            libraryPrefs.showWorkCount.toggle();
-          },
-          child: const Icon(Symbols.play_arrow),
-        ),
-        FloatingActionButton(
-          heroTag: 'fab_cycle_display', // Unique HeroTag
-          tooltip: 'Cycle Display Mode',
+          tooltip: 'Toggle Continue Reading Button Visibility',
           foregroundColor: context.scheme.onSecondaryContainer,
           backgroundColor: context.scheme.secondaryContainer,
           splashColor: context.scheme.onSecondaryContainer.withValues(
             alpha: 0.1,
           ),
           onPressed: () {
-            // Cycle display mode using read
-            libraryPrefs.displayMode.cycle(DisplayMode.values);
+            // Toggle the specific preference using read
+            libraryPrefs.showWorkCount.toggle();
           },
-          child: const Icon(Symbols.view_list), // Changed icon example
+          child: const Icon(Symbols.play_arrow, fill: 1.0),
         ),
         FloatingActionButton(
           heroTag: 'fab_add_work', // Unique HeroTag
           tooltip: 'Add Random Work',
-          onPressed: () async {
-            final work = WorkModel.generateRandomWork();
-            await worksRepo.upsertWork(work);
-            // Optionally trigger a refresh if needed, though the stream should update
-            // ref.read(libraryStateProvider.notifier).refresh();
-          },
+          onPressed: () => _showAddWorkDialog(context),
           child: const Icon(Symbols.add),
         ),
       ],
+    );
+  }
+
+  Future<void> _showAddWorkDialog(BuildContext context) async {
+    // Use a local variable for the loading state within the dialog
+    bool isLoading = false;
+    // Use a GlobalKey for the Form if you add validation
+    // final _formKey = GlobalKey<FormState>();
+
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: !isLoading, // Prevent dismissing while loading
+      builder: (BuildContext dialogContext) {
+        // Use StatefulWidget for the dialog content to manage loading state
+        return AddWorkDialog();
+      },
     );
   }
 

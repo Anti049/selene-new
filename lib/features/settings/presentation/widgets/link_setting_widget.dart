@@ -24,7 +24,7 @@ class LinkSettingWidget extends StatelessWidget {
       title: label,
       subtitle: subtitle,
       icon: icon,
-      onTap: () {
+      onTap: (context) {
         context.router.pushNamed(route);
       },
       enabled: enabled,

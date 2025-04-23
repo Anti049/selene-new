@@ -40,6 +40,8 @@ class WorkModel with _$WorkModel {
     @Default([]) List<SeriesModel> series,
     @Default([]) List<TagModel> tags,
     @Default([]) List<ChapterModel> chapters,
+    int? lastReadChapterIndex,
+    double? lastReadScrollOffset,
   }) = _WorkModel;
 
   factory WorkModel.generateRandomWork() {

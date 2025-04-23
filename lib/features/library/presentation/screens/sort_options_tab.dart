@@ -33,7 +33,7 @@ class SortOptionsTab extends ConsumerWidget {
                         ? Symbols.arrow_upward
                         : Symbols.arrow_downward
                     : null,
-            onTap: () {
+            onTap: (context) {
               if (libraryPrefs.sortBy.get() == sortBy) {
                 libraryPrefs.sortOrder.cycle(SortOrder.values);
               } else {

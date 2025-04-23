@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:selene/core/constants/animation_constants.dart'; // Import animation constants
 import 'package:selene/core/utils/theming.dart';
 import 'package:selene/features/banners/presentation/widgets/banner_widget.dart';
+import 'package:selene/features/banners/providers/fullscreen_provider.dart';
 import 'package:selene/features/more/providers/more_preferences.dart';
 
 class BannersContainer extends ConsumerWidget {
@@ -14,9 +15,12 @@ class BannersContainer extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Get preferences
     final morePrefs = ref.watch(morePreferencesProvider);
-    final isDownloadedVisible = morePrefs.downloadedOnlyMode.get();
-    final isIncognitoVisible = morePrefs.incognitoMode.get();
+    final fullscreen = ref.watch(fullscreenProvider);
+    final isDownloadedVisible =
+        morePrefs.downloadedOnlyMode.get() && !fullscreen;
+    final isIncognitoVisible = morePrefs.incognitoMode.get() && !fullscreen;
     final isAnyBannerVisible = isDownloadedVisible || isIncognitoVisible;
 
     // Determine topmost status
@@ -37,18 +41,47 @@ class BannersContainer extends ConsumerWidget {
           isIncognitoVisible,
         );
 
-    final appBrightness = context.scheme.brightness;
+    final incognitoBanner = BannerWidget(
+      label: 'Incognito Mode',
+      backgroundColor: context.scheme.secondary,
+      textColor: context.scheme.onSecondary,
+      visible: isIncognitoVisible,
+      isTopmost: isIncognitoTopmost,
+      bannerIndex: incognitoBannerIndex,
+      totalVisibleBanners: totalVisibleAboveIncognito,
+    );
+    final downloadedBanner = BannerWidget(
+      label: 'Downloaded Only',
+      backgroundColor: context.scheme.primary,
+      textColor: context.scheme.onPrimary,
+      visible: isDownloadedVisible,
+      isTopmost: isDownloadedTopmost,
+      bannerIndex: downloadedBannerIndex,
+      totalVisibleBanners: 0,
+    );
+
+    final banners = [incognitoBanner, downloadedBanner];
+
+    // Calculate the system UI overlay styles
+    final statusBarColor =
+        isDownloadedTopmost
+            ? downloadedBanner.backgroundColor
+            : isIncognitoTopmost
+            ? incognitoBanner.backgroundColor
+            : Colors.transparent;
+    final statusBarIconBrightness = ThemeData.estimateBrightnessForColor(
+      statusBarColor,
+    );
 
     final statusBarStyle = SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
-      statusBarIconBrightness:
-          isAnyBannerVisible ? appBrightness : appBrightness.inverted,
+      statusBarIconBrightness: statusBarIconBrightness.inverted,
     );
 
     final navBarStyle = FlexColorScheme.themedSystemNavigationBar(
       context,
-      systemNavBarStyle: FlexSystemNavBarStyle.transparent,
-      opacity: 0.5,
+      systemNavBarStyle: FlexSystemNavBarStyle.navigationBar,
+      opacity: fullscreen ? 1.0 : 0.5,
     );
 
     final appStyle = navBarStyle.copyWith(
@@ -61,7 +94,7 @@ class BannersContainer extends ConsumerWidget {
       child: Stack(
         children: [
           // Main Content Area - Use AnimatedPadding
-          AnimatedPadding(
+          AnimatedContainer(
             padding: EdgeInsets.only(top: targetTotalBannerHeight),
             duration: kAnimationDuration, // Use same duration as banners
             curve: kAnimationCurve, // Use same curve as banners
@@ -69,26 +102,7 @@ class BannersContainer extends ConsumerWidget {
           ),
 
           // Banners
-          // Incognito Banner
-          BannerWidget(
-            label: 'Incognito Mode',
-            backgroundColor: context.scheme.secondary,
-            textColor: context.scheme.onSecondary,
-            visible: isIncognitoVisible,
-            isTopmost: isIncognitoTopmost,
-            bannerIndex: incognitoBannerIndex,
-            totalVisibleBanners: totalVisibleAboveIncognito,
-          ),
-          // Downloaded Only Banner
-          BannerWidget(
-            label: 'Downloaded Only',
-            backgroundColor: context.scheme.primary,
-            textColor: context.scheme.onPrimary,
-            visible: isDownloadedVisible,
-            isTopmost: isDownloadedTopmost,
-            bannerIndex: downloadedBannerIndex,
-            totalVisibleBanners: 0,
-          ),
+          ...banners,
         ],
       ),
     );

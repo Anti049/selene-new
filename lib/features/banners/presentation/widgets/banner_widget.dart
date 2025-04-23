@@ -26,35 +26,35 @@ class BannerWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Banner variables
     final statusBarHeight = context.mediaQuery.viewPadding.top;
-    final double height = _bannerHeight + (isTopmost ? statusBarHeight : 0.0);
-    final double topOffset =
-        _bannerHeight * bannerIndex + (isTopmost ? 0 : statusBarHeight);
-    final double hiddenTopOffset = -(_bannerHeight * (totalVisibleBanners + 1));
-
-    Widget bannerContent = Container(
-      height: height,
-      color: backgroundColor,
-      padding: EdgeInsets.only(
-        top: (isTopmost ? statusBarHeight : 0.0),
-      ), // Add padding for status bar if topmost
-      alignment: Alignment.center,
-      child: Text(
-        label,
-        style: context.text.labelMedium?.copyWith(color: textColor),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
-    );
+    final height = _bannerHeight + statusBarHeight;
+    final topOffset = totalVisibleBanners * _bannerHeight;
+    final hiddenTopOffset = -height; // Offscreen when not visible
 
     return AnimatedPositioned(
-      duration: kAnimationDuration, //
-      curve: kAnimationCurve, //
+      duration: kAnimationDuration,
+      curve: kAnimationCurve,
       top: visible ? topOffset : hiddenTopOffset,
       left: 0,
       right: 0,
       height: height,
-      child: bannerContent,
+      child: Column(
+        children: [
+          Container(height: statusBarHeight, color: backgroundColor),
+          Container(
+            height: _bannerHeight,
+            color: backgroundColor,
+            alignment: Alignment.center,
+            child: Text(
+              label,
+              style: context.text.labelMedium?.copyWith(color: textColor),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -65,17 +65,15 @@ class BannerWidget extends StatelessWidget {
     bool isIncognitoVisible,
   ) {
     final statusBarHeight = context.mediaQuery.viewPadding.top;
-    double totalHeight = 0;
+    double totalHeight = 0.0;
     if (isDownloadedVisible) {
-      totalHeight +=
-          _bannerHeight + statusBarHeight; // Downloaded is always top
+      totalHeight += _bannerHeight; // Downloaded is always top
     }
-    if (isIncognitoVisible && !isDownloadedVisible) {
-      totalHeight +=
-          _bannerHeight +
-          statusBarHeight; // Incognito is top only if Downloaded is not
-    } else if (isIncognitoVisible) {
+    if (isIncognitoVisible) {
       totalHeight += _bannerHeight; // Incognito is second banner
+    }
+    if (totalHeight > 0) {
+      totalHeight += statusBarHeight;
     }
     return totalHeight;
   }

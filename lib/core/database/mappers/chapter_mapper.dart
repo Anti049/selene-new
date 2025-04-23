@@ -16,6 +16,10 @@ class ChapterMapper {
       wordCount: chapter.wordCount,
       datePublished: chapter.datePublished,
       content: chapter.content,
+      summary: chapter.summary,
+      startNotes: chapter.startNotes,
+      endNotes: chapter.endNotes,
+      isRead: chapter.isRead,
     );
   }
 
@@ -33,6 +37,10 @@ class ChapterMapper {
       wordCount: chapterModel.wordCount,
       datePublished: chapterModel.datePublished,
       content: chapterModel.content,
+      summary: chapterModel.summary,
+      startNotes: chapterModel.startNotes,
+      endNotes: chapterModel.endNotes,
+      isRead: chapterModel.isRead,
     );
 
     // If the model has an id, set it on the entity

@@ -113,13 +113,11 @@ class MainApp extends ConsumerWidget {
               theme: lightTheme,
               darkTheme: darkTheme,
               debugShowCheckedModeBanner: kDebugMode,
-              routerConfig: _appRouter.config(),
+              routerConfig: _appRouter.config(
+                navigatorObservers: () => [AutoRouteObserver()],
+              ),
               builder: (context, child) {
                 if (child == null) return const SizedBox.shrink();
-
-                final delegate = _appRouter.delegate();
-                final topMatch = delegate.currentConfiguration?.topMatch;
-                final showBanners = !_isFullScreen(topMatch);
 
                 return ResponsiveBreakpoints(
                   breakpoints: [
@@ -133,7 +131,7 @@ class MainApp extends ConsumerWidget {
                       name: kExtraLarge,
                     ),
                   ],
-                  child: showBanners ? BannersContainer(child: child) : child,
+                  child: BannersContainer(child: child),
                 );
               },
             );

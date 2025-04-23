@@ -29,7 +29,7 @@ class SwitchSettingWidget extends StatelessWidget {
         value: preference.get(),
         onChanged: (value) => preference.set(value),
       ),
-      onTap: () => preference.toggle(),
+      onTap: (context) => preference.toggle(),
     );
   }
 }

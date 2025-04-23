@@ -57,10 +57,15 @@ class TagChip extends StatelessWidget {
           if (icon != null) ...[
             Icon(icon, size: 16.0, fill: 1.0, color: textColor(context)),
           ],
-          Text(
-            tag.name,
-            style: context.text.labelMedium?.copyWith(
-              color: textColor(context),
+          Flexible(
+            child: Text(
+              tag.name,
+              style: context.text.labelMedium?.copyWith(
+                color: textColor(context),
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              softWrap: false,
             ),
           ),
         ],

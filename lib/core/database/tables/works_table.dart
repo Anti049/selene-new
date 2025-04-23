@@ -33,6 +33,8 @@ class Work {
   @Index()
   final tags = IsarLinks<Tag>();
   final chapters = IsarLinks<Chapter>();
+  late int lastReadChapterIndex;
+  late double lastReadScrollOffset;
 
   Work({
     required this.title,
@@ -43,5 +45,7 @@ class Work {
     this.coverURL,
     this.datePublished,
     this.dateUpdated,
+    this.lastReadChapterIndex = 0,
+    this.lastReadScrollOffset = 0.0,
   });
 }

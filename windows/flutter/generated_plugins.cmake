@@ -5,8 +5,10 @@
 list(APPEND FLUTTER_PLUGIN_LIST
   dynamic_color
   isar_flutter_libs
+  permission_handler_windows
   sqlite3_flutter_libs
   system_theme
+  url_launcher_windows
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST

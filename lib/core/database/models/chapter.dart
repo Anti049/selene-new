@@ -14,5 +14,9 @@ class ChapterModel with _$ChapterModel {
     int? wordCount,
     DateTime? datePublished,
     String? content,
+    String? summary,
+    String? startNotes,
+    String? endNotes,
+    @Default(false) bool isRead,
   }) = _ChapterModel;
 }

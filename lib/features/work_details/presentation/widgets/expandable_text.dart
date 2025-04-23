@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'package:selene/core/utils/theming.dart';
 
 class ExpandableText extends StatefulWidget {
@@ -48,16 +49,18 @@ class _ExpandableTextState extends State<ExpandableText>
     final style = context.text.bodyMedium!
         .copyWith(color: context.text.bodySmall?.color)
         .merge(widget.style);
+    // Convert HTML to plaintext (with lines breaks and formatting)
+    final plainText = widget.text.replaceAll(RegExp(r'<[^>]*>'), '\n').trim();
 
     final textPainter = TextPainter(
-      text: TextSpan(text: widget.text, style: style),
+      text: TextSpan(text: plainText, style: style),
       textDirection: TextDirection.ltr,
     )..layout(maxWidth: context.mediaQuery.size.width);
 
     _textHeight = textPainter.height + 1.0;
 
     final collapsedTextPainter = TextPainter(
-      text: TextSpan(text: widget.text, style: style),
+      text: TextSpan(text: plainText, style: style),
       maxLines: widget.maxLines,
       textDirection: TextDirection.ltr,
     )..layout(maxWidth: context.mediaQuery.size.width);
@@ -130,7 +133,11 @@ class _ExpandableTextState extends State<ExpandableText>
                                   _requiresTruncation
                                       ? _heightAnimation.value / _textHeight
                                       : 1.0,
-                              child: Text(widget.text, style: widget.style),
+                              child: HtmlWidget(
+                                widget.text,
+                                textStyle:
+                                    widget.style ?? context.text.bodyMedium,
+                              ),
                             ),
                           ),
                           if (_requiresTruncation)

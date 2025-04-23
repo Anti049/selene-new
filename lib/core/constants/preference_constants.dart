@@ -42,3 +42,15 @@ const kDefaultContrastLevel = 0.0;
 const kDefaultBlendLevel = 6.0;
 const kDefaultEinkMode = false;
 const kDefaultPureBlackMode = false;
+// - Settings -> Library
+// - Settings -> Accounts
+// - Settings -> Reader
+// - Settings -> Downloads
+// - Settings -> Tracking
+// - Settings -> Browse
+// - Settings -> Notifications
+// - Settings -> Data & Storage
+const kDefaultLibraryFolder = '';
+const kDefaultImportFolders = <String>[];
+// - Settings -> Security & Privacy
+// - Settings -> Advanced

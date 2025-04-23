@@ -1,7 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:selene/features/banners/models/providers/banner_state_provider.dart';
+import 'package:selene/features/banners/providers/banner_state_provider.dart';
 import 'package:selene/features/settings/screens/appearance/providers/appearance_preferences.dart';
 
 @RoutePage()

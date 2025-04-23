@@ -13,11 +13,13 @@ import 'package:selene/core/database/models/tag.dart';
 import 'package:selene/core/database/models/work.dart';
 import 'package:selene/core/database/providers/library_providers.dart';
 import 'package:selene/core/utils/theming.dart';
-import 'package:selene/features/banners/models/providers/banner_state_provider.dart';
+import 'package:selene/features/banners/providers/banner_state_provider.dart';
 import 'package:selene/features/settings/screens/appearance/providers/appearance_preferences.dart';
+import 'package:selene/features/work_details/presentation/widgets/chapter_widget.dart';
 import 'package:selene/features/work_details/presentation/widgets/details_action_row.dart';
 import 'package:selene/features/work_details/presentation/widgets/details_tag_section.dart';
 import 'package:selene/features/work_details/presentation/widgets/expandable_text.dart';
+import 'package:selene/routing/router.gr.dart';
 
 @RoutePage()
 class WorkDetailsPage extends ConsumerStatefulWidget {
@@ -110,7 +112,7 @@ class _WorkDetailsPageState extends ConsumerState<WorkDetailsPage> {
     // Re-fetch work from database
     WorkModel? work = await ref
         .read(worksRepositoryProvider)
-        .getWorkById(widget.work.id!);
+        .getWorkByID(widget.work.id!);
     if (work == null) {
       // Show error snackbar
       if (context.mounted) {
@@ -540,15 +542,9 @@ class _WorkDetailsPageState extends ConsumerState<WorkDetailsPage> {
               Column(
                 children: [
                   for (var i = 0; i < _work.chapters.length; i++)
-                    ListTile(
-                      title: Text('Chapter ${_work.chapters[i].index + 1}'),
-                      subtitle: Text(_work.chapters[i].title),
-                      trailing: Icon(Symbols.chevron_right),
-                      onTap: () {
-                        // context.router.push(
-                        //   ReaderRoute(work: _work, chapter: i),
-                        // );
-                      },
+                    ChapterWidget(
+                      chapterID: _work.chapters[i].id!,
+                      work: _work,
                     ),
                 ],
               ),
@@ -564,7 +560,7 @@ class _WorkDetailsPageState extends ConsumerState<WorkDetailsPage> {
             builder: (context, scrolledToBottom, child) {
               return FloatingActionButton.extended(
                 onPressed: () {
-                  // context.router.push(ReaderRoute(work: _work));
+                  context.router.push(ReaderRoute(work: _work));
                 },
                 label: AnimatedSize(
                   duration: Duration(milliseconds: 200),

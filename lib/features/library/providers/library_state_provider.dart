@@ -22,7 +22,6 @@ class LibraryState extends _$LibraryState {
   @override
   Stream<LibraryStateModel> build() {
     // Get providers
-    final logger = ref.read(loggerProvider);
     final sortBy = ref.watch(
       libraryPreferencesProvider.select((prefs) => prefs.sortBy.get()),
     );

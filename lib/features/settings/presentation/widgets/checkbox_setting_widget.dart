@@ -105,7 +105,7 @@ class CheckboxSettingWidget extends StatelessWidget {
               : null,
       enabled: enabled,
       dense: dense,
-      onTap: cycleValue,
+      onTap: (context) => cycleValue(),
     );
   }
 }

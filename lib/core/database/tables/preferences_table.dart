@@ -54,6 +54,18 @@ class Preferences with _$Preferences {
     @Default(kDefaultBlendLevel) double? blendLevel,
     @Default(kDefaultEinkMode) bool? einkMode,
     @Default(kDefaultPureBlackMode) bool? pureBlackMode,
+    // Settings -> Library
+    // Settings -> Accounts
+    // Settings -> Reader
+    // Settings -> Downloads
+    // Settings -> Tracking
+    // Settings -> Browse
+    // Settings -> Notifications
+    // Settings -> Data & Storage
+    @Default(kDefaultLibraryFolder) String libraryFolder,
+    @Default(kDefaultImportFolders) List<String> importFolders,
+    // Settings -> Security & Privacy
+    // Settings -> Advanced
   }) = _Preferences;
 
   factory Preferences.fromJson(Map<String, Object?> json) =>

@@ -14,7 +14,7 @@ class ButtonSettingWidget extends StatelessWidget {
   final String label;
   final String? subtitle;
   final IconData? icon;
-  final VoidCallback onTap;
+  final Function(BuildContext) onTap;
   final bool enabled;
 
   @override

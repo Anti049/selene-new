@@ -24,6 +24,8 @@ enum SettingType {
   widgetSetting,
   dividerSetting,
   groupSetting,
+  fileSetting, // Not used yet
+  folderSetting,
 }
 
 @freezed
@@ -40,7 +42,7 @@ class SearchableSettingItem with _$SearchableSettingItem {
     Preference? preference,
     Widget? widget,
     String? route,
-    Function()? onTapAction,
+    Function(BuildContext)? onTapAction,
     List<Enum>? options,
     List<SearchableSettingItem>? children,
     @Default(true) bool enabled,
@@ -128,7 +130,7 @@ class SearchableSettingItem with _$SearchableSettingItem {
           label: label,
           subtitle: subtitle,
           icon: icon,
-          onTap: onTapAction ?? () {},
+          onTap: onTapAction ?? (context) {},
         );
       case SettingType.linkSetting:
         return LinkSettingWidget(

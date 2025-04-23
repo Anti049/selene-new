@@ -16,6 +16,10 @@ class Chapter {
   int? wordCount;
   DateTime? datePublished;
   String? content;
+  String? summary;
+  String? startNotes;
+  String? endNotes;
+  late bool isRead;
 
   @Backlink(to: 'chapters')
   final work = IsarLink<Work>();
@@ -27,5 +31,9 @@ class Chapter {
     this.wordCount,
     this.datePublished,
     this.content,
+    this.summary,
+    this.startNotes,
+    this.endNotes,
+    this.isRead = false,
   });
 }

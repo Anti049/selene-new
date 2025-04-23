@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:selene/core/utils/theming.dart';
-import 'package:selene/features/banners/models/providers/banner_state_provider.dart';
+import 'package:selene/features/banners/providers/banner_state_provider.dart';
 import 'package:selene/features/settings/presentation/widgets/link_setting_widget.dart';
 import 'package:selene/features/settings/providers/settings_providers.dart';
 
@@ -188,7 +188,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             subtitle: 'Manage data, storage, and cache settings',
             icon: Symbols.storage,
             route: '/settings/data-storage',
-            enabled: false,
           ),
           LinkSettingWidget(
             label: 'Security & Privacy',

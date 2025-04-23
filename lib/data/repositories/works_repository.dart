@@ -20,10 +20,10 @@ import 'package:selene/core/database/tables/series_table.dart';
 import 'package:selene/core/database/tables/tags_table.dart';
 import 'package:selene/core/database/tables/works_table.dart';
 
-class WorkRepository {
+class WorksRepository {
   final Isar _isar;
 
-  WorkRepository(this._isar);
+  WorksRepository(this._isar);
 
   // --- Read Operations ---
   /// Watch all raw [Works] from the [_isar] database
@@ -61,7 +61,7 @@ class WorkRepository {
   /// Get a [Work] by its [id] from the [_isar] database
   ///
   /// Returns null if the work is not found
-  Future<WorkModel?> getWorkById(int id) async {
+  Future<WorkModel?> getWorkByID(int id) async {
     // Get the work from the database
     final workEntity = await _isar.works.get(id);
 
@@ -92,8 +92,21 @@ class WorkRepository {
   ///
   /// Returns the [Work] that was upserted
   Future<WorkModel> upsertWork(WorkModel workModel) async {
+    // Check if a work has the same sourceURL
+    final existingWork =
+        await _isar.works
+            .filter()
+            .sourceURLEqualTo(workModel.sourceURL)
+            .findFirst();
+
     // Map WorkModel to Work table object
     final workEntity = WorkMapper.mapToTable(workModel);
+    if (existingWork != null) {
+      // If a work with the same sourceURL exists, update the entity
+      workEntity.id = existingWork.id;
+    }
+
+    // Initialize workID
     int workID = -1;
 
     // Upsert the work to the database/Perform database operations within a transaction
@@ -133,27 +146,40 @@ class WorkRepository {
       // Save the work entity to the database
       workID = await _isar.works.put(workEntity);
 
+      // --- Update Links ---
+      // Fetch the potentially updated work entity to ensure links are saved correctly
+      final savedWorkEntity = await _isar.works.get(workID);
+      if (savedWorkEntity == null) {
+        // Should not happen in a successful transaction, but handle defensively
+        throw Exception("Failed to retrieve saved work with ID: $workID");
+      }
+
       // Link the fandom(s), author(s), series, tag(s), and chapter(s) to the work
       // - Fandoms
-      workEntity.fandoms.clear();
-      workEntity.fandoms.addAll(fandomEntities);
-      await workEntity.fandoms.save();
+      savedWorkEntity.fandoms.clear();
+      savedWorkEntity.fandoms.addAll(fandomEntities);
+      await savedWorkEntity.fandoms.save();
       // - Authors
-      workEntity.authors.clear();
-      workEntity.authors.addAll(authorEntities);
-      await workEntity.authors.save();
+      savedWorkEntity.authors.clear();
+      savedWorkEntity.authors.addAll(authorEntities);
+      await savedWorkEntity.authors.save();
       // - Series
-      workEntity.series.clear();
-      workEntity.series.addAll(seriesEntities);
-      await workEntity.series.save();
+      savedWorkEntity.series.clear();
+      savedWorkEntity.series.addAll(seriesEntities);
+      await savedWorkEntity.series.save();
       // - Tags
-      workEntity.tags.clear();
-      workEntity.tags.addAll(tagEntities);
-      await workEntity.tags.save();
+      savedWorkEntity.tags.clear();
+      savedWorkEntity.tags.addAll(tagEntities);
+      await savedWorkEntity.tags.save();
       // - Chapters
-      workEntity.chapters.clear();
-      workEntity.chapters.addAll(chapterEntities);
-      await workEntity.chapters.save();
+      savedWorkEntity.chapters.clear();
+      savedWorkEntity.chapters.addAll(chapterEntities);
+      await savedWorkEntity.chapters.save();
+      // Also update the backlink from chapters to the work
+      for (final chapter in chapterEntities) {
+        chapter.work.value = savedWorkEntity;
+        await chapter.work.save();
+      }
     });
 
     // Return the upserted work
@@ -161,10 +187,36 @@ class WorkRepository {
     return WorkMapper.mapToModel(savedEntity!);
   }
 
+  /// Updates a work's read progress
+  Future<void> updateWorkProgress(
+    int workID, {
+    int? chapterIndex,
+    double? scrollOffset,
+  }) {
+    return _isar.writeTxn(() async {
+      final work = await _isar.works.get(workID);
+      if (work == null) {
+        throw Exception("Work with ID $workID not found");
+      }
+      bool changed = false;
+      if (chapterIndex != null && work.lastReadChapterIndex != chapterIndex) {
+        work.lastReadChapterIndex = chapterIndex;
+        changed = true;
+      }
+      if (scrollOffset != null && work.lastReadScrollOffset != scrollOffset) {
+        work.lastReadScrollOffset = scrollOffset;
+        changed = true;
+      }
+      if (changed) {
+        await _isar.works.put(work);
+      }
+    });
+  }
+
   /// Delete a [Work] by its [id] from the [_isar] database
   ///
   /// Returns true if the work was deleted, false otherwise
-  Future<bool> deleteWorkById(int id) async {
+  Future<bool> deleteWorkByID(int id) async {
     // Delete the work from the database
     bool wasWorkDeleted = false;
     // ALL chapters will be deleted
@@ -243,11 +295,11 @@ class WorkRepository {
     return wasWorkDeleted;
   }
 
-  Future<bool> deleteWorksByIds(List<int> ids) async {
+  Future<bool> deleteWorksByIDs(List<int> ids) async {
     // Delete multiple works by their IDs
     bool allDeleted = true;
     for (final id in ids) {
-      final wasDeleted = await deleteWorkById(id);
+      final wasDeleted = await deleteWorkByID(id);
       if (!wasDeleted) allDeleted = false;
     }
     return allDeleted;

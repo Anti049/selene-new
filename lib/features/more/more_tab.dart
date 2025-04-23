@@ -61,7 +61,6 @@ class MoreTab extends ConsumerWidget {
           label: 'Data & Storage',
           icon: Symbols.storage,
           route: '/settings/data-storage',
-          enabled: false,
         ),
         const Divider(),
         LinkSettingWidget(

@@ -62,6 +62,8 @@ class WorkMapper {
       series: series,
       tags: tags,
       chapters: chapters,
+      lastReadChapterIndex: work.lastReadChapterIndex,
+      lastReadScrollOffset: work.lastReadScrollOffset,
     );
   }
 
@@ -83,6 +85,8 @@ class WorkMapper {
       coverURL: workModel.coverURL,
       datePublished: workModel.datePublished,
       dateUpdated: workModel.dateUpdated,
+      lastReadChapterIndex: workModel.lastReadChapterIndex ?? 0,
+      lastReadScrollOffset: workModel.lastReadScrollOffset ?? 0.0,
     );
 
     // If the model has an id, set it on the entity

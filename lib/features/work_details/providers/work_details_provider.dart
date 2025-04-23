@@ -8,5 +8,5 @@ part 'work_details_provider.g.dart';
 @riverpod
 Future<WorkModel?> workDetails(Ref ref, int workID) async {
   final worksRepository = ref.watch(worksRepositoryProvider);
-  return worksRepository.getWorkById(workID);
+  return worksRepository.getWorkByID(workID);
 }

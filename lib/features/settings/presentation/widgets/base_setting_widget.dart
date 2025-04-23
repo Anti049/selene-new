@@ -23,7 +23,7 @@ class BaseSettingWidget extends StatelessWidget {
   final Widget? leading;
   final Widget? trailing;
   final IconData? icon;
-  final VoidCallback? onTap;
+  final Function(BuildContext)? onTap;
   final bool enabled;
   final bool dense;
   final String? disabledMessage;
@@ -67,7 +67,7 @@ class BaseSettingWidget extends StatelessWidget {
       trailing: trailing,
       onTap:
           enabled
-              ? onTap
+              ? () => onTap?.call(context)
               : disabledMessage.isNotNullOrBlank
               ? () {
                 if (disabledMessage != null) {

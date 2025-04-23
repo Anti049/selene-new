@@ -40,6 +40,8 @@ class AppRouter extends RootStackRouter {
     ),
     // Library -> Work Details
     AutoRoute(path: '/library/:work', page: WorkDetailsRoute.page),
+    // Library -> Work Details -> Reader
+    AutoRoute(path: '/reader/:work', page: ReaderRoute.page),
     // More -> Settings
     AutoRoute(path: '/settings', page: SettingsRoute.page),
     // More -> Settings -> Subpages
@@ -48,5 +50,6 @@ class AppRouter extends RootStackRouter {
       path: '/settings/appearance/theme-selection',
       page: ThemeSelectionRoute.page,
     ),
+    AutoRoute(path: '/settings/data-storage', page: DataStorageRoute.page),
   ];
 }

@@ -1,16 +1,16 @@
-import 'dart:math';
-
 import 'package:animated_visibility/animated_visibility.dart';
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:percent_indicator/percent_indicator.dart';
 import 'package:selene/core/constants/animation_constants.dart';
 import 'package:selene/core/database/models/tag.dart';
 import 'package:selene/core/database/models/work.dart';
 import 'package:selene/core/utils/theming.dart';
 import 'package:selene/features/library/presentation/widgets/tag_chip.dart';
 import 'package:selene/features/library/providers/library_preferences.dart';
-import 'package:percent_indicator/percent_indicator.dart';
+import 'package:selene/routing/router.gr.dart';
 
 class LibraryComponentItem extends ConsumerStatefulWidget {
   const LibraryComponentItem({
@@ -33,7 +33,7 @@ class LibraryComponentItem extends ConsumerStatefulWidget {
 
 class _LibraryComponentItemState extends ConsumerState<LibraryComponentItem> {
   bool _isExpanded = false;
-  double _readProgress = 0.5; // Placeholder for read progress
+  double _readProgress = 0.0; // Placeholder for read progress
 
   void _toggleExpansion() {
     setState(() {
@@ -245,14 +245,21 @@ class _LibraryComponentItemState extends ConsumerState<LibraryComponentItem> {
                               IconButton.filled(
                                 icon: Icon(Symbols.play_arrow, fill: 1.0),
                                 onPressed: () {
-                                  // context.router.push(
-                                  //   ReaderRoute(work: widget.work),
-                                  // );
-                                  setState(() {
-                                    _readProgress =
-                                        Random().nextInt(101) /
-                                        100.0; // Simulate read progress
-                                  });
+                                  // Read last read progress from the work model
+                                  final lastChapterIndex =
+                                      widget.work.lastReadChapterIndex;
+                                  final lastScrollOffset =
+                                      widget.work.lastReadScrollOffset;
+
+                                  context.router.push(
+                                    ReaderRoute(
+                                      work: widget.work,
+                                      initialChapterIndex:
+                                          lastChapterIndex, // Can be null
+                                      initialScrollOffset:
+                                          lastScrollOffset, // Can be null
+                                    ),
+                                  );
                                 },
                               ),
                           ],
@@ -264,7 +271,14 @@ class _LibraryComponentItemState extends ConsumerState<LibraryComponentItem> {
               ),
               // Progress Bar
               LinearPercentIndicator(
-                percent: _readProgress, // TODO: Implement real read progress
+                percent:
+                    (widget.work.chapters.isEmpty)
+                        ? 0.0
+                        : ((widget.work.lastReadChapterIndex ?? -1) + 1) /
+                            widget
+                                .work
+                                .chapters
+                                .length, // TODO: Implement real read progress
                 backgroundColor:
                     widget.isSelected
                         ? ElevationOverlay.applySurfaceTint(

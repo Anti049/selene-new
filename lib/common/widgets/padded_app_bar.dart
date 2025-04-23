@@ -5,7 +5,7 @@ import 'package:material_symbols_icons/symbols.dart';
 import 'package:selene/core/constants/animation_constants.dart';
 import 'package:selene/core/constants/ui_constants.dart';
 import 'package:selene/core/utils/theming.dart';
-import 'package:selene/features/banners/models/providers/banner_state_provider.dart';
+import 'package:selene/features/banners/providers/banner_state_provider.dart';
 
 class PaddedAppBar extends ConsumerWidget implements PreferredSizeWidget {
   PaddedAppBar({
