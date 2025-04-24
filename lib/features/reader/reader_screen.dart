@@ -3,13 +3,11 @@ import 'package:auto_route/auto_route.dart';
 import 'package:dartx/dartx.dart';
 import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:selene/common/widgets/padded_app_bar.dart';
 import 'package:selene/core/constants/animation_constants.dart';
-import 'package:selene/core/constants/ui_constants.dart';
 import 'package:selene/core/database/models/work.dart';
 import 'package:selene/core/utils/theming.dart';
 import 'package:selene/features/banners/providers/fullscreen_provider.dart';
@@ -332,8 +330,8 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen>
   @override
   Widget build(BuildContext context) {
     final pages = [
-      _buildTitlePage(context), // Title page
-      _buildInfoPage(context), // Info page
+      // _buildTitlePage(context), // Title page
+      // _buildInfoPage(context), // Info page
       ..._buildChapterPages(context), // Chapter pages
     ];
     return Scaffold(
@@ -359,6 +357,9 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen>
       body: AnimatedContainer(
         duration: kAnimationDuration,
         curve: kAnimationCurve,
+        padding: EdgeInsets.only(
+          top: !_showControls ? context.mediaQuery.viewPadding.top : 0.0,
+        ),
         child: GestureDetector(
           onTap: toggleControls,
           // child: SelectableRegion(
@@ -380,7 +381,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen>
         exitDuration: kAnimationDuration,
         child: Container(
           height: 72.0 + context.mediaQuery.systemGestureInsets.bottom,
-          color: context.scheme.surface,
+          color: context.scheme.surfaceContainer,
         ),
       ),
     );
