@@ -21,7 +21,6 @@ class BannersContainer extends ConsumerWidget {
     final isDownloadedVisible =
         morePrefs.downloadedOnlyMode.get() && !fullscreen;
     final isIncognitoVisible = morePrefs.incognitoMode.get() && !fullscreen;
-    final isAnyBannerVisible = isDownloadedVisible || isIncognitoVisible;
 
     // Determine topmost status
     final isDownloadedTopmost = isDownloadedVisible;

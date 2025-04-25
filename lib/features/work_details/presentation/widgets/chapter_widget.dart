@@ -10,6 +10,8 @@ import 'package:selene/core/database/models/work.dart';
 import 'package:selene/core/database/providers/library_providers.dart';
 import 'package:selene/core/utils/theming.dart';
 import 'package:selene/data/remote/work_service_registry.dart';
+import 'package:selene/features/download_queue/models/download_task.dart';
+import 'package:selene/features/download_queue/providers/download_queue_provider.dart';
 import 'package:selene/routing/router.gr.dart';
 
 class ChapterWidget extends ConsumerStatefulWidget {
@@ -134,6 +136,10 @@ class _ChapterWidgetState extends ConsumerState<ChapterWidget>
 
   @override
   Widget build(BuildContext context) {
+    final downloadQueue = ref.watch(downloadQueueProvider);
+    final chapterTask = downloadQueue.queue.firstOrNullWhere(
+      (task) => task.chapterId == widget.chapterID,
+    );
     // TODO: Implement read status handling
     // TODO: Implement skeleton loading state
     if (_chapter == null) {
@@ -172,7 +178,7 @@ class _ChapterWidgetState extends ConsumerState<ChapterWidget>
                 child: Padding(
                   padding: const EdgeInsets.all(4.0),
                   child: AnimatedVisibility(
-                    visible: _isLoading,
+                    visible: chapterTask != null && !_isLoaded,
                     enter: fadeIn(curve: kAnimationCurve),
                     enterDuration: kAnimationDuration,
                     exit: fadeOut(curve: kAnimationCurve),
@@ -207,7 +213,18 @@ class _ChapterWidgetState extends ConsumerState<ChapterWidget>
               ),
             ],
           ),
-          onPressed: _loadChapter,
+          onPressed: () {
+            if (_chapter != null && widget.work != null) {
+              final task = DownloadTask(
+                taskId: _chapter!.sourceURL ?? 'chapter_${_chapter!.id!}',
+                workId: widget.work!.id!,
+                workTitle: widget.work!.title,
+                chapterId: _chapter!.id!,
+                chapterTitle: _chapter!.title,
+              );
+              ref.read(downloadQueueProvider.notifier).addTask(task);
+            }
+          },
         ),
         secondChild: IconButton(
           icon: Icon(
@@ -221,7 +238,7 @@ class _ChapterWidgetState extends ConsumerState<ChapterWidget>
             // setState(() {
             //   _isRead = !_isRead;
             // });
-            _loadChapter(); // Reload to update read status
+            // _loadChapter(); // Reload to update read status
           },
         ),
         crossFadeState:

@@ -20,6 +20,7 @@ import 'package:selene/features/work_details/presentation/widgets/details_action
 import 'package:selene/features/work_details/presentation/widgets/details_tag_section.dart';
 import 'package:selene/features/work_details/presentation/widgets/expandable_text.dart';
 import 'package:selene/routing/router.gr.dart';
+import 'package:shimmer/shimmer.dart';
 
 @RoutePage()
 class WorkDetailsPage extends ConsumerStatefulWidget {
@@ -197,6 +198,24 @@ class _WorkDetailsPageState extends ConsumerState<WorkDetailsPage> {
     final aspectRatio = 3.0 / 4.0; // 3:4 aspect ratio
     final imageHeight = 140.0;
     final imageWidth = imageHeight * aspectRatio; // 3:4 aspect ratio
+    return Container(
+      constraints: BoxConstraints(
+        maxHeight: imageHeight, // Fixed height for cover image
+        maxWidth: imageWidth, // Fixed width for cover image
+        minHeight: imageHeight, // Ensure it doesn't shrink below this height
+        minWidth: imageWidth, // Ensure it doesn't shrink below this width
+      ),
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(8.0)),
+      clipBehavior: Clip.antiAlias,
+      child: AspectRatio(
+        aspectRatio: 3.0 / 4.0,
+        child: Shimmer.fromColors(
+          baseColor: context.scheme.surfaceContainerHigh,
+          highlightColor: context.scheme.surfaceContainerLow,
+          child: Container(color: context.scheme.surfaceContainerHigh),
+        ),
+      ),
+    );
     return Container(
       constraints: BoxConstraints(
         maxHeight: imageHeight, // Fixed height for cover image

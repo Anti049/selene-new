@@ -3,9 +3,7 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
-  dynamic_color
   isar_flutter_libs
-  sqlite3_flutter_libs
   system_theme
   url_launcher_linux
 )

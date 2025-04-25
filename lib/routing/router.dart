@@ -50,6 +50,11 @@ class AppRouter extends RootStackRouter {
       path: '/settings/appearance/theme-selection',
       page: ThemeSelectionRoute.page,
     ),
+    // AutoRoute(path: '/settings/downloads', page: DownloadsRoute.page),
+    AutoRoute(
+      path: '/settings/downloads/download-queue',
+      page: DownloadQueueRoute.page,
+    ),
     AutoRoute(path: '/settings/data-storage', page: DataStorageRoute.page),
   ];
 }

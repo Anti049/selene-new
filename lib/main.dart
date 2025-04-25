@@ -2,6 +2,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:isar/isar.dart';
 import 'package:responsive_framework/responsive_framework.dart';
@@ -10,15 +11,26 @@ import 'package:selene/core/database/providers/isar_provider.dart';
 import 'package:selene/core/logging/logger_provider.dart';
 import 'package:selene/core/theme/providers/theme_repository_provider.dart';
 import 'package:selene/features/banners/presentation/widgets/banners_container.dart';
+import 'package:selene/features/notifications/services/notification_service.dart';
 import 'package:selene/features/settings/screens/appearance/providers/appearance_preferences.dart';
 import 'package:selene/routing/router.dart';
 import 'package:system_theme/system_theme.dart';
 
 late Isar isarInstance;
 
+@pragma('vm:entry-point')
+void notificationTapBackground(NotificationResponse notificationResponse) {
+  // handle action
+  print('Notification tapped: ${notificationResponse.payload}');
+}
+
 void main() async {
   // Ensure plugin services are initialized
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize notification service
+  final notificationService = NotificationService();
+  await notificationService.initialize();
 
   // Enable edge-to-edge
   SystemChrome.setEnabledSystemUIMode(

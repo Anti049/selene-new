@@ -8,32 +8,45 @@ environment:
 
 dependencies:
     animated_visibility: ^0.0.4
-    animations: ^2.0.11
-    appbar_animated: ^0.0.3
+    # animations: ^2.0.11
+    # annas_archive_api: ^0.4.4
+    # app_badge_plus: ^1.2.1
+    # audio_service: ^0.18.18
     auto_route: ^9.2.2
+    # background_downloader: ^9.2.0
+    # battery_plus: ^6.2.1
     beautiful_soup_dart: ^0.3.0
     change_case: ^2.2.0
+    # cloud_functions: ^5.4.0
+    # connectivity_plus: ^6.1.4
     cupertino_icons: ^1.0.8
     dartx: ^1.2.0
-    device_info_plus: ^11.3.3
+    device_info_plus: ^11.4.0
     dio: ^5.8.0+1
     draggable_menu: ^4.4.1
-    drift: ^2.26.0
-    drift_db_viewer: ^2.1.0
-    drift_flutter: ^0.2.4
-    dynamic_color: ^1.7.0
+    # dynamic_color: ^1.7.0
     easy_refresh: ^3.4.0
+    epubx: ^4.0.0
     file_picker: ^10.1.2
+    # firebase_analytics: ^11.4.5
+    # firebase_crashlytics: ^4.3.5
     flex_color_scheme: ^8.2.0
     flutter:
         sdk: flutter
     flutter_hooks: ^0.21.2
+    # flutter_inappwebview: ^6.1.5
     flutter_layout_grid: ^2.0.8
+    flutter_local_notifications: ^19.1.0
+    # flutter_native_splash: ^2.2.16
     flutter_riverpod: ^2.6.1
+    # flutter_secure_storage: ^9.2.4
     flutter_svg: ^2.0.17
     flutter_widget_from_html: ^0.16.0
     freezed_annotation: ^2.4.4
+    google_fonts: ^6.2.1
+    # googleapis: ^14.0.0
     hooks_riverpod: ^2.6.1
+    # infinite_scroll_pagination: ^5.0.0
     isar:
         version: 3.1.8
         hosted: https://pub.isar-community.dev/
@@ -41,31 +54,35 @@ dependencies:
         version: 3.1.8
         hosted: https://pub.isar-community.dev/
     json_annotation: ^4.9.0
-    lazy_load_scrollview: ^1.3.0
     logger: ^2.5.0
     material_color_utilities: ^0.11.1
     material_symbols_icons: ^4.2811.0
     meta: ^1.16.0
-    nested_overscroll: ^0.0.1
-    nested_scroll_view_plus: ^3.0.0
-    nested_scroll_views: ^0.0.12
+    # package_info_plus: ^8.3.0
     path: ^1.9.1
     path_provider: ^2.1.5
     percent_indicator: ^4.2.5
     permission_handler: ^12.0.0+1
+    puppeteer: ^3.16.0
     responsive_framework: ^1.5.1
     riverpod_annotation: ^2.6.1
     rxdart: ^0.28.0
+    # share_plus: ^11.0.0
+    shimmer: ^3.0.0
     stream_transform: ^2.1.1
     system_theme: ^3.1.2
-    vertical_scrollable_pageview: ^0.0.3
+    # vibration: ^3.1.3
     visibility_detector: ^0.4.0+2
+    vocsy_epub_viewer:
+        git:
+            url: https://github.com/Sahad2701/vocsy_epub_viewer.git
+            ref: refactor/deprecate-registrar
+    webview_flutter: ^4.11.0
 
 dev_dependencies:
     auto_route_generator: ^9.0.0
     build_runner: ^2.4.15
     custom_lint: ^0.7.0
-    drift_dev: ^2.26.0
     flutter_lints: ^5.0.0
     flutter_test:
         sdk: flutter

@@ -46,6 +46,7 @@ const kDefaultPureBlackMode = false;
 // - Settings -> Accounts
 // - Settings -> Reader
 // - Settings -> Downloads
+const kDefaultDownloadDelaySeconds = 2;
 // - Settings -> Tracking
 // - Settings -> Browse
 // - Settings -> Notifications

@@ -43,7 +43,6 @@ class MoreTab extends ConsumerWidget {
           label: 'Download Queue',
           icon: Symbols.download,
           route: '/settings/downloads/download-queue',
-          enabled: false,
         ),
         LinkSettingWidget(
           label: 'Categories',

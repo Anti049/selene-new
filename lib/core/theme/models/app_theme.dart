@@ -219,6 +219,7 @@ abstract class AppTheme with _$AppTheme {
                 : SchemeColor.surfaceContainer,
         snackBarBackgroundSchemeColor: SchemeColor.inverseSurface,
         snackBarActionSchemeColor: SchemeColor.inversePrimary,
+        menuPadding: EdgeInsets.zero,
       ),
       useMaterial3ErrorColors: true,
       visualDensity: FlexColorScheme.comfortablePlatformDensity,

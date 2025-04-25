@@ -7,10 +7,13 @@ plugins {
 
 android {
     namespace = "dev.nploetz.selene"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 35 // Use the latest stable SDK version for compatibility with the latest Flutter and Android libraries.
     ndkVersion = "27.0.12077973"
 
     compileOptions {
+        // Enable desugaring to use Java 8+ APIs on older Android versions.
+        isCoreLibraryDesugaringEnabled = true
+        // Use Java 17 for compatibility with the latest Flutter and Android libraries.
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
@@ -37,6 +40,11 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
     }
+}
+
+dependencies {
+    // Add core library desugaring for Java 8+ APIs on older Android versions.
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }
 
 flutter {
