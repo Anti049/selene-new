@@ -450,10 +450,10 @@ packages:
     dependency: "direct main"
     description:
       name: file_picker
-      sha256: "8986dec4581b4bcd4b6df5d75a2ea0bede3db802f500635d05fa8be298f9467f"
+      sha256: "3dc3f3323aba75b20d298198be007d61b589a16e2aa7812ab8761f7c4d386f98"
       url: "https://pub.dev"
     source: hosted
-    version: "10.1.2"
+    version: "10.1.0"
   fixnum:
     dependency: transitive
     description:
@@ -1370,6 +1370,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.4.1"
+  string_stats:
+    dependency: "direct main"
+    description:
+      name: string_stats
+      sha256: c8f707f5dcbb4613592d8371ca49828fcb1226dea4f62cf8af6b4a0adf3da4c0
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.1.0"
   synchronized:
     dependency: transitive
     description:
@@ -1628,7 +1636,7 @@ packages:
     source: hosted
     version: "1.2.3"
   watcher:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: watcher
       sha256: "69da27e49efa56a15f8afe8f4438c4ec02eff0a117df1b22ea4aad194fe1c104"

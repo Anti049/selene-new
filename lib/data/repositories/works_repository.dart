@@ -1,6 +1,11 @@
+import 'dart:async';
 import 'dart:collection';
+import 'dart:io';
 
 import 'package:isar/isar.dart';
+import 'package:logger/logger.dart';
+import 'package:path/path.dart' as p;
+import 'package:rxdart/rxdart.dart';
 import 'package:selene/core/database/mappers/author_mapper.dart';
 import 'package:selene/core/database/mappers/chapter_mapper.dart';
 import 'package:selene/core/database/mappers/fandom_mapper.dart';
@@ -19,72 +24,303 @@ import 'package:selene/core/database/tables/fandoms_table.dart';
 import 'package:selene/core/database/tables/series_table.dart';
 import 'package:selene/core/database/tables/tags_table.dart';
 import 'package:selene/core/database/tables/works_table.dart';
+import 'package:selene/data/local/file_service_registry.dart';
+import 'package:selene/features/settings/screens/data_storage/providers/data_storage_preferences.dart';
+import 'package:watcher/watcher.dart';
 
 class WorksRepository {
+  // Dependencies
   final Isar _isar;
+  final DataStoragePreferences _dataStoragePrefs;
+  final FileServiceRegistry _fileServiceRegistry;
+  final Logger _logger;
+  // Stream utilities
+  StreamSubscription? _directoryWatcherSubscription;
+  StreamSubscription? _preferencesSubscription;
+  final _fileSystemChangeController = StreamController<void>.broadcast();
 
-  WorksRepository(this._isar);
+  WorksRepository(
+    this._isar,
+    this._dataStoragePrefs,
+    this._fileServiceRegistry,
+    this._logger,
+  ) {
+    // Initialize directory watcher for the library folder
+    _initDirectoryWatcher();
+    // Listen to data storage preferences changes
+    _preferencesSubscription = _dataStoragePrefs.libraryFolder.stream.listen((
+      _,
+    ) {
+      // Reinitialize directory watcher if the library folder changes
+      _initDirectoryWatcher();
+    });
+  }
+
+  // Dispose method to clean up resources
+  void dispose() {
+    // Cancel directory watcher subscription if it exists
+    _directoryWatcherSubscription?.cancel();
+    // Cancel preferences subscription if it exists
+    _preferencesSubscription?.cancel();
+    // Close the file system change controller
+    _fileSystemChangeController.close();
+  }
+
+  // Initialize directory watcher for the library folder
+  void _initDirectoryWatcher() {
+    // Cancel existing subscription if it exists
+    _directoryWatcherSubscription?.cancel();
+    _directoryWatcherSubscription = null;
+
+    // Validate library folder
+    final libraryFolder = _dataStoragePrefs.libraryFolder.get();
+    if (libraryFolder.isEmpty) {
+      _logger.w(
+        'Library folder is not set. Skipping directory watcher initialization.',
+      );
+      return;
+    }
+    if (!Directory(libraryFolder).existsSync()) {
+      _logger.w(
+        'Library folder does not exist: $libraryFolder. Skipping directory watcher initialization.',
+      );
+      return;
+    }
+    _logger.i(
+      'Initializing directory watcher for library folder: $libraryFolder',
+    );
+
+    try {
+      // Watch for create/delete/move events in the library folder
+      final watcher = DirectoryWatcher(libraryFolder);
+      _directoryWatcherSubscription = watcher.events.listen((event) {
+        // Log the event
+        _logger.i('File system event: ${event.type} at ${event.path}');
+
+        // Normalize the path to handle different OS path formats
+        final normalizedPath = p.normalize(event.path);
+        final extension = p.extension(normalizedPath).toLowerCase();
+
+        // Filter for EPUB files and relevant events
+        if (_fileServiceRegistry.allAcceptedExtensions.contains(extension)) {
+          switch (event.type) {
+            case ChangeType.ADD:
+              _logger.i('EPUB file added: $normalizedPath');
+              // Handle new EPUB file addition
+              _handleFileAdd(normalizedPath);
+              break;
+            case ChangeType.REMOVE:
+              _logger.i('EPUB file removed: $normalizedPath');
+              // Handle EPUB file removal
+              _handleFileDelete(normalizedPath);
+              break;
+            case ChangeType.MODIFY:
+              _logger.i('EPUB file modified: $normalizedPath');
+              // Handle EPUB file modification
+              _handleFileChange(normalizedPath);
+              break;
+          }
+        }
+      });
+    } catch (e) {
+      _logger.e('Failed to initialize directory watcher: $e');
+      // Restart after 15-second delay
+      _logger.i('Retrying directory watcher initialization in 15 seconds...');
+      _directoryWatcherSubscription?.cancel();
+      _directoryWatcherSubscription = null;
+      Future.delayed(const Duration(seconds: 15), _initDirectoryWatcher);
+    }
+
+    // Create a new DirectoryWatcher for the library folder
+    final watcher = DirectoryWatcher(_dataStoragePrefs.libraryFolder.get());
+    // Listen to file system events
+    _directoryWatcherSubscription = watcher.events.listen((event) {
+      // Add event to the controller
+      _fileSystemChangeController.add(null);
+      // Log the event
+      _logger.i('File system event: ${event.type} at ${event.path}');
+    });
+  }
+
+  Future<void> _handleFileAdd(String filePath) async {
+    // Find appropriate service
+    final fileService = _fileServiceRegistry.getServiceByExtension(
+      p.extension(filePath).toLowerCase(),
+    );
+    if (fileService == null) {
+      _logger.w('No file service found for file: $filePath');
+      return;
+    }
+
+    try {
+      // Check if work already exists by filePath
+      final existingWork =
+          await _isar.works.filter().filePathEqualTo(filePath).findFirst();
+      if (existingWork != null) {
+        _logger.w('Work already exists for file: $filePath');
+        // TODO: Update work metadata if file modification timestamp is newer
+        return;
+      }
+
+      // Load the work from the file using the file service
+      _logger.i('Adding new work from file: $filePath');
+      final workModel = await fileService.loadFile(filePath);
+      if (workModel == null) {
+        _logger.w('Failed to load work from file: $filePath');
+        return;
+      }
+
+      // Upsert the work to the database
+      _logger.i('Loaded work from file: $filePath, upserting to database...');
+      final savedWork = await upsertWork(workModel);
+      _fileSystemChangeController.add(null);
+      _logger.i(
+        'Work upserted successfully: ${savedWork.id} - ${savedWork.title}',
+      );
+    } catch (e) {
+      _logger.e('Failed to handle file add for $filePath: $e');
+      return;
+    }
+  }
+
+  Future<void> _handleFileDelete(String filePath) async {
+    try {
+      // Find work by filePath
+      final workToDelete =
+          await _isar.works.filter().filePathEqualTo(filePath).findFirst();
+
+      if (workToDelete == null) {
+        _logger.w('No work found for file: $filePath');
+        return;
+      }
+
+      // Delete the work by ID
+      // TODO: Add to "Deleted Works" table for recovery
+      _logger.i('Deleting work for file: $filePath, ID: ${workToDelete.id}');
+      final wasDeleted = await deleteWorkByID(workToDelete.id);
+      if (!wasDeleted) {
+        _logger.w('Failed to delete work for file: $filePath');
+        return;
+      }
+      _logger.i('Work deleted successfully for file: $filePath');
+      _fileSystemChangeController.add(null);
+    } catch (e) {
+      _logger.e('Failed to handle file delete for $filePath: $e');
+      return;
+    }
+  }
+
+  Future<void> _handleFileChange(String filePath) async {
+    // Find the appropriate service
+    final fileService = _fileServiceRegistry.getServiceByExtension(
+      p.extension(filePath).toLowerCase(),
+    );
+    if (fileService == null) {
+      _logger.w('No file service found for file: $filePath');
+      return;
+    }
+    try {
+      // Find work by filePath
+      final workToUpdate =
+          await _isar.works.filter().filePathEqualTo(filePath).findFirst();
+      if (workToUpdate == null) {
+        _logger.w('No work found for file: $filePath');
+        return;
+      }
+
+      // Load the work from the file using the file service
+      _logger.i('Updating work from file: $filePath');
+      final workModel = await fileService.loadFile(filePath);
+      if (workModel == null) {
+        _logger.w('Failed to load work from file: $filePath');
+        return;
+      }
+      // Upsert the work to the database
+      _logger.i('Loaded work from file: $filePath, upserting to database...');
+      final updatedWork = workModel.copyWith(
+        id: workToUpdate.id,
+        filePath: filePath,
+        readProgress: workToUpdate.readProgress,
+      );
+      final savedWork = await upsertWork(updatedWork);
+      _fileSystemChangeController.add(null);
+      _logger.i(
+        'Work updated successfully: ${savedWork.id} - ${savedWork.title}',
+      );
+    } catch (e) {
+      _logger.e('Failed to handle file change for $filePath: $e');
+      return;
+    }
+  }
 
   // --- Read Operations ---
   /// Watch all raw [Works] from the [_isar] database
   ///
   /// Returns a stream of [WorkModel]
   Stream<List<Work>> watchAllWorksRaw() {
-    // Watch all works from the database
-    return _isar.works.where().watch(fireImmediately: true);
+    // Get streams
+    final isarStream = _isar.works.where().watch(fireImmediately: true);
+    final fileSystemStream = _fileSystemChangeController.stream;
+
+    // Combine streams to watch all works from the database and file system changes
+    return Rx.combineLatest2(
+      isarStream,
+      fileSystemStream.startWith(null),
+      (isarList, _) => isarList,
+    ).distinct((prev, next) => prev == next);
   }
 
   /// Watch all [Works] from the [_isar] database
   ///
   /// Returns a stream of [WorkModel]
   Stream<List<WorkModel>> watchAllWorks() {
-    // Watch all works from the database
-    return _isar.works
-        .where()
-        .watch(fireImmediately: true)
-        .asyncMap(
-          (table) => Future.wait(table.map(WorkMapper.mapToModel).toList()),
-        );
+    return watchAllWorksRaw().asyncMap((worksTable) async {
+      try {
+        return await _isar.txn(() async {
+          return await Future.wait(
+            worksTable.map(WorkMapper.mapToModel).toList(),
+          );
+        });
+      } catch (e) {
+        _logger.e('Error in watchAllWorks: $e');
+        return []; // Return an empty list on error
+      }
+    });
   }
 
   /// Get all [Works] from the [_isar] database
   ///
   /// Returns a list of [WorkModel]
   Future<List<WorkModel>> getAllWorks() async {
-    // Get all works from the database
     final worksTable = await _isar.works.where().findAll();
-
-    // Map the works to WorkModel and return
-    return Future.wait(worksTable.map(WorkMapper.mapToModel).toList());
+    // Use transaction for potentially complex mapping
+    return await _isar.txn(() async {
+      return await Future.wait(worksTable.map(WorkMapper.mapToModel).toList());
+    });
   }
 
   /// Get a [Work] by its [id] from the [_isar] database
   ///
   /// Returns null if the work is not found
   Future<WorkModel?> getWorkByID(int id) async {
-    // Get the work from the database
     final workEntity = await _isar.works.get(id);
-
-    // If the work is not found, return null
     if (workEntity == null) return null;
-
-    // Map entity to model and return
-    return WorkMapper.mapToModel(workEntity);
+    // Use transaction for potentially complex mapping
+    return await _isar.txn(() => WorkMapper.mapToModel(workEntity));
   }
 
   /// Get a [Work] by its [sourceURL] from the [_isar] database
   ///
   /// Returns null if the work is not found
   Future<WorkModel?> getWorkBySourceURL(String sourceURL) async {
-    // Get the work from the database
     final workEntity =
-        await _isar.works.filter().sourceURLEqualTo(sourceURL).findFirst();
-
-    // If the work is not found, return null
+        await _isar.works
+            .filter()
+            .sourceURLEqualTo(sourceURL, caseSensitive: false)
+            .findFirst();
     if (workEntity == null) return null;
-
-    // Map entity to model and return
-    return WorkMapper.mapToModel(workEntity);
+    // Use transaction for potentially complex mapping
+    return await _isar.txn(() => WorkMapper.mapToModel(workEntity));
   }
 
   // --- Write Operations ---
@@ -92,22 +328,40 @@ class WorksRepository {
   ///
   /// Returns the [Work] that was upserted
   Future<WorkModel> upsertWork(WorkModel workModel) async {
-    // Check if a work has the same sourceURL
-    final existingWork =
-        await _isar.works
-            .filter()
-            .sourceURLEqualTo(workModel.sourceURL)
-            .findFirst();
+    // Check if a work has the same filePath
+    Work? existingWork;
+    if (workModel.filePath != null) {
+      existingWork =
+          await _isar.works
+              .filter()
+              .filePathEqualTo(workModel.filePath!)
+              .findFirst();
+    }
+    // If no filePath, check by sourceURL
+    if (existingWork == null && workModel.sourceURL != null) {
+      existingWork =
+          await _isar.works
+              .filter()
+              .sourceURLEqualTo(workModel.sourceURL, caseSensitive: false)
+              .findFirst();
+    }
+    // If no existing work found, check by ID
+    if (existingWork == null && workModel.id != null) {
+      existingWork = await _isar.works.get(workModel.id!);
+    }
 
     // Map WorkModel to Work table object
     final workEntity = WorkMapper.mapToTable(workModel);
     if (existingWork != null) {
       // If a work with the same sourceURL exists, update the entity
       workEntity.id = existingWork.id;
+      // Preserve read progress
+      workEntity.readProgress =
+          workModel.readProgress ?? existingWork.readProgress;
     }
 
     // Initialize workID
-    int workID = -1;
+    int workID = Isar.autoIncrement;
 
     // Upsert the work to the database/Perform database operations within a transaction
     await _isar.writeTxn(() async {
@@ -180,31 +434,29 @@ class WorksRepository {
         chapter.work.value = savedWorkEntity;
         await chapter.work.save();
       }
+      _logger.d('Work upserted with ID: $workID');
     });
 
     // Return the upserted work
-    final savedEntity = await _isar.works.get(workID);
-    return WorkMapper.mapToModel(savedEntity!);
+    final finalWorkEntity = await _isar.works.get(workID);
+    if (finalWorkEntity == null) {
+      _logger.e("Failed to fetch final work entity after upsert. ID: $workID");
+      throw Exception("Upsert failed for work: ${workModel.title}");
+    }
+    // Use transaction for potentially complex mapping
+    return await _isar.txn(() => WorkMapper.mapToModel(finalWorkEntity));
   }
 
   /// Updates a work's read progress
-  Future<void> updateWorkProgress(
-    int workID, {
-    int? chapterIndex,
-    double? scrollOffset,
-  }) {
+  Future<void> updateWorkProgress(int workID, {String? readProgress}) {
     return _isar.writeTxn(() async {
       final work = await _isar.works.get(workID);
       if (work == null) {
         throw Exception("Work with ID $workID not found");
       }
       bool changed = false;
-      if (chapterIndex != null && work.lastReadChapterIndex != chapterIndex) {
-        work.lastReadChapterIndex = chapterIndex;
-        changed = true;
-      }
-      if (scrollOffset != null && work.lastReadScrollOffset != scrollOffset) {
-        work.lastReadScrollOffset = scrollOffset;
+      if (readProgress != null && work.readProgress != readProgress) {
+        work.readProgress = readProgress;
         changed = true;
       }
       if (changed) {

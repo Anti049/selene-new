@@ -6,6 +6,7 @@ import 'package:selene/core/constants/animation_constants.dart';
 import 'package:selene/core/database/providers/library_providers.dart';
 import 'package:selene/core/utils/theming.dart';
 import 'package:selene/data/remote/work_service_registry.dart';
+import 'package:selene/features/settings/screens/data_storage/providers/data_storage_preferences.dart';
 
 class AddWorkDialog extends ConsumerStatefulWidget {
   const AddWorkDialog({super.key});
@@ -47,6 +48,7 @@ class _AddWorkDialogState extends ConsumerState<AddWorkDialog> {
     final worksRepository = ref.read(worksRepositoryProvider);
     final workServiceRegistry = ref.read(workServiceRegistryProvider);
     final workService = workServiceRegistry.getServiceByURL(url);
+    final dataStoragePrefs = ref.read(dataStoragePreferencesProvider);
     if (workService == null) {
       setState(() {
         _isLoading = false;
@@ -58,6 +60,7 @@ class _AddWorkDialogState extends ConsumerState<AddWorkDialog> {
     try {
       final work = await workService.downloadWork(
         url,
+        dataStoragePrefs.libraryFolder.get(),
         onProgress: _setProgress,
       );
       setState(() {

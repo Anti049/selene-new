@@ -51,6 +51,7 @@ class WorkMapper {
       id: work.id,
       title: work.title,
       sourceURL: work.sourceURL,
+      filePath: work.filePath,
       summary: work.summary,
       fandoms: fandoms,
       wordCount: work.wordCount,
@@ -62,8 +63,7 @@ class WorkMapper {
       series: series,
       tags: tags,
       chapters: chapters,
-      lastReadChapterIndex: work.lastReadChapterIndex,
-      lastReadScrollOffset: work.lastReadScrollOffset,
+      readProgress: work.readProgress,
     );
   }
 
@@ -79,14 +79,14 @@ class WorkMapper {
     final workEntity = Work(
       title: workModel.title,
       sourceURL: workModel.sourceURL,
+      filePath: workModel.filePath,
       summary: workModel.summary,
       wordCount: workModel.wordCount,
       status: workModel.status,
       coverURL: workModel.coverURL,
       datePublished: workModel.datePublished,
       dateUpdated: workModel.dateUpdated,
-      lastReadChapterIndex: workModel.lastReadChapterIndex ?? 0,
-      lastReadScrollOffset: workModel.lastReadScrollOffset ?? 0.0,
+      readProgress: workModel.readProgress,
     );
 
     // If the model has an id, set it on the entity

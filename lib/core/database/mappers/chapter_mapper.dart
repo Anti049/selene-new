@@ -15,10 +15,6 @@ class ChapterMapper {
       index: chapter.index,
       wordCount: chapter.wordCount,
       datePublished: chapter.datePublished,
-      content: chapter.content,
-      summary: chapter.summary,
-      startNotes: chapter.startNotes,
-      endNotes: chapter.endNotes,
       isRead: chapter.isRead,
     );
   }
@@ -36,10 +32,6 @@ class ChapterMapper {
       index: chapterModel.index,
       wordCount: chapterModel.wordCount,
       datePublished: chapterModel.datePublished,
-      content: chapterModel.content,
-      summary: chapterModel.summary,
-      startNotes: chapterModel.startNotes,
-      endNotes: chapterModel.endNotes,
       isRead: chapterModel.isRead,
     );
 

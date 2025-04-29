@@ -246,12 +246,7 @@ class _ChapterWidgetState extends ConsumerState<ChapterWidget>
       ),
       onTap: () {
         if (widget.work != null) {
-          context.router.push(
-            ReaderRoute(
-              work: widget.work!,
-              initialChapterIndex: _chapter!.index - 1,
-            ),
-          );
+          context.router.push(ReaderRoute(work: widget.work!));
           return;
         }
       },

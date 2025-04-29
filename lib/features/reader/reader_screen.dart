@@ -17,16 +17,10 @@ import 'package:selene/features/reader/presentation/widgets/scrollable_page_view
 
 @RoutePage()
 class ReaderScreen extends ConsumerStatefulWidget {
-  const ReaderScreen({
-    super.key,
-    required this.work,
-    this.initialChapterIndex,
-    this.initialScrollOffset,
-  });
+  const ReaderScreen({super.key, required this.work, this.readProgress});
 
   final WorkModel work;
-  final int? initialChapterIndex; // Optional initial chapter index
-  final double? initialScrollOffset; // Optional initial scroll offset
+  final String? readProgress;
 
   @override
   ConsumerState<ConsumerStatefulWidget> createState() => _ReaderScreenState();
@@ -45,10 +39,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen>
     super.initState();
     // TODO: Load last read page from DB for widget.work.id
     // int initialPage = loadLastReadPage(widget.work.id); // Implement this
-    _currentPage =
-        widget.initialChapterIndex != null
-            ? (widget.initialChapterIndex! + 2)
-            : 0; // +2 for title and info pages
+    _currentPage = 0; // +2 for title and info pages
     _pageController = PageController(initialPage: _currentPage);
     _refreshController = EasyRefreshController(
       controlFinishRefresh: true,
@@ -367,7 +358,6 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen>
           child: ScrollablePageView(
             pages: pages,
             startPageIndex: _currentPage,
-            startScrollOffset: widget.initialScrollOffset ?? 0.0,
             onPageIndexChanged: _updateReadProgress,
           ),
           // ),

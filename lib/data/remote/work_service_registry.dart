@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:selene/core/logging/logger_provider.dart';
+import 'package:selene/data/local/file_service_registry.dart';
 import 'package:selene/data/remote/ao3_work_service.dart';
 import 'package:selene/data/remote/i_work_service.dart';
 
@@ -24,6 +25,13 @@ class WorkServiceRegistry {
 
 @riverpod
 WorkServiceRegistry workServiceRegistry(Ref ref) {
+  final fileServiceRegistry = ref.watch(fileServiceRegistryProvider);
+  // Ensure the file service registry is initialized before creating work services
+  if (fileServiceRegistry.services.isEmpty) {
+    throw Exception('File service registry is not initialized.');
+  }
   final logger = ref.watch(loggerProvider);
-  return WorkServiceRegistry([AO3WorkService(logger: logger)]);
+  return WorkServiceRegistry([
+    AO3WorkService(logger: logger, fileServiceRegistry: fileServiceRegistry),
+  ]);
 }

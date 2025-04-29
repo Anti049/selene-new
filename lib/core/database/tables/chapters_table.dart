@@ -15,10 +15,6 @@ class Chapter {
   late int index;
   int? wordCount;
   DateTime? datePublished;
-  String? content;
-  String? summary;
-  String? startNotes;
-  String? endNotes;
   late bool isRead;
 
   @Backlink(to: 'chapters')
@@ -30,10 +26,6 @@ class Chapter {
     required this.index,
     this.wordCount,
     this.datePublished,
-    this.content,
-    this.summary,
-    this.startNotes,
-    this.endNotes,
     this.isRead = false,
   });
 }

@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:logger/logger.dart';
 import 'package:selene/core/database/models/chapter.dart';
 import 'package:selene/core/database/models/work.dart';
+import 'package:selene/data/local/file_service_registry.dart';
 
 abstract class IWorkService {
   // Service metadata
@@ -21,6 +22,8 @@ abstract class IWorkService {
   final Dio dio;
   // Logging
   final Logger logger;
+  // Local file services
+  final FileServiceRegistry fileServiceRegistry;
 
   // Constructor
   IWorkService({
@@ -36,6 +39,7 @@ abstract class IWorkService {
     this.hasAdultWorks = false,
     Dio? dioClient,
     required this.logger,
+    required this.fileServiceRegistry,
   }) : dio = dioClient ?? Dio() {
     dio.options.baseUrl = 'https://$siteDomain';
     dio.options.headers['User-Agent'] = 'Selene/1.0 (https://selene.app)';
@@ -59,7 +63,8 @@ abstract class IWorkService {
 
   // Methods
   Future<WorkModel?> downloadWork(
-    String sourceURL, {
+    String sourceURL,
+    String filePath, {
     bool downloadChapters = false,
     Function({int? progress, int? total, String? message})? onProgress,
   });

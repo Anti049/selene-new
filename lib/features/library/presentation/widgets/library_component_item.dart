@@ -246,18 +246,12 @@ class _LibraryComponentItemState extends ConsumerState<LibraryComponentItem> {
                                 icon: Icon(Symbols.play_arrow, fill: 1.0),
                                 onPressed: () {
                                   // Read last read progress from the work model
-                                  final lastChapterIndex =
-                                      widget.work.lastReadChapterIndex;
-                                  final lastScrollOffset =
-                                      widget.work.lastReadScrollOffset;
+                                  final readProgress = widget.work.readProgress;
 
                                   context.router.push(
                                     ReaderRoute(
                                       work: widget.work,
-                                      initialChapterIndex:
-                                          lastChapterIndex, // Can be null
-                                      initialScrollOffset:
-                                          lastScrollOffset, // Can be null
+                                      readProgress: readProgress,
                                     ),
                                   );
                                 },
@@ -271,14 +265,7 @@ class _LibraryComponentItemState extends ConsumerState<LibraryComponentItem> {
               ),
               // Progress Bar
               LinearPercentIndicator(
-                percent:
-                    (widget.work.chapters.isEmpty)
-                        ? 0.0
-                        : ((widget.work.lastReadChapterIndex ?? -1) + 1) /
-                            widget
-                                .work
-                                .chapters
-                                .length, // TODO: Implement real read progress
+                percent: 0.0, // TODO: Implement real read progress
                 backgroundColor:
                     widget.isSelected
                         ? ElevationOverlay.applySurfaceTint(

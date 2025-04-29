@@ -6,11 +6,13 @@ import 'package:selene/core/database/models/fandom.dart';
 import 'package:selene/core/database/models/tag.dart';
 import 'package:selene/core/database/models/work.dart';
 import 'package:selene/data/remote/i_work_service.dart';
+import 'package:string_stats/string_stats.dart';
 
 class AO3WorkService extends IWorkService {
   // Constructor
   AO3WorkService({
     required super.logger,
+    required super.fileServiceRegistry,
     super.email = '',
     super.password = '',
     super.dioClient,
@@ -75,7 +77,8 @@ class AO3WorkService extends IWorkService {
   // Methods
   @override
   Future<WorkModel?> downloadWork(
-    String sourceURL, {
+    String sourceURL,
+    String filePath, {
     bool downloadChapters = false,
     Function({int? progress, int? total, String? message})? onProgress,
   }) async {
@@ -357,6 +360,7 @@ class AO3WorkService extends IWorkService {
         .find('div', class_: 'summary')
         ?.find('blockquote');
     final summary = summaryElement?.innerHtml.trim() ?? '';
+    final summaryText = summaryElement?.text.trim() ?? '';
 
     // Content
     // div class="userstuff"
@@ -375,6 +379,7 @@ class AO3WorkService extends IWorkService {
       }
     }
     final content = contentElement.innerHtml.trim();
+    final contentText = contentElement.text.trim();
 
     // Start Notes
     // div class="notes module" -> blockquote
@@ -383,6 +388,7 @@ class AO3WorkService extends IWorkService {
         .find('div', class_: 'notes module')
         ?.find('blockquote');
     final startNotes = startNotesElement?.innerHtml.trim() ?? '';
+    final startNotesText = startNotesElement?.text.trim() ?? '';
 
     // End Notes
     // div class="end notes module" -> blockquote
@@ -390,14 +396,14 @@ class AO3WorkService extends IWorkService {
         .find('div', class_: 'end notes module')
         ?.find('blockquote');
     final endNotes = endNotesElement?.innerHtml.trim() ?? '';
+    final endNotesText = endNotesElement?.text.trim() ?? '';
 
     // Word Count
     // Word count is calculated from the plain text content + both notes + summary
     final wordCount =
-        (content + startNotes + endNotes + summary)
-            .split(RegExp(r'\s+'))
-            .where((word) => word.isNotEmpty)
-            .length;
+        WordCounter.fromString(
+          '$summaryText $contentText $startNotesText $endNotesText',
+        ).count;
 
     // Return the chapter with updated content
     return source.copyWith(
