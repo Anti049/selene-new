@@ -161,6 +161,22 @@ I am utilizing a feature-first architecture for the application, which means tha
                 -   Contact information for support
                 -   Links to the application's GitHub repository and issue tracker
 
+The packages I'm currently using in the application include the following (feel free to recommend better alternatives if there are any, except where explicitly stated otherwise). Please look at my pubspec.yaml for any packages I haven't specified by name and their versions:
+
+-   Riverpod: For state management
+-   Isar: For database management
+-   Freezed: For data classes and immutability
+-   Flex Color Scheme: For theming and color management
+-   Auto Route: For routing and navigation
+-   Draggable Menu: For creating a resizable bottom sheet for the library sort/filter/display/tag options
+-   Dio: For making HTTP requests
+-   BeautifulSoup Dart: For parsing HTML content
+-   Easy Refresh: What I'm currently using for vertical paging and vertical scrolling in the reader
+-   (Formerly) Epubx: I was using epubx to parse EPUB files, but documentation on actually CREATING EPUB files with it is nonexistent, so I scrapped it in favor of writing my own EPUB file reading/writing logic using the archive package to read/write ZIP files and the xml package to read/write XML files
+-   Flutter Local Notifications: For displaying notifications, haven't gotten a notification to display yet
+-   Logger: For logging
+-   RXDart: For reactive programming and streams
+
 The application has a good amount of barebones functionality already implemented, but requires refining and simplification of the codebase. The current implementation uses Isar for database management, but I am looking to refactor the code to store only metadata in the database while keeping the actual content of the works in eBook files. This will allow for better performance and easier management of works. In the future, I would like to explore options for cloud backup and synchronization to allow for a fluid experience between devices (similar to how Chrome and Firefox allow tab syncing between devices), but for now, the focus will be on local storage and management.
 
 My current objectives are the following:
