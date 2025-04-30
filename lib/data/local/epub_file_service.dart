@@ -1,6 +1,10 @@
+import 'dart:convert';
 import 'dart:io';
 
+import 'package:dartx/dartx.dart';
 import 'package:epubx/epubx.dart';
+import 'package:selene/core/database/models/author.dart';
+import 'package:selene/core/database/models/fandom.dart';
 import 'package:selene/core/database/models/work.dart';
 import 'package:selene/data/local/i_file_service.dart';
 
@@ -31,6 +35,7 @@ class EpubFileService extends IFileService {
           ..ContentMimeType = 'application/xhtml+xml'
           ..ContentType = EpubContentType.XHTML_1_1;
     book.Content!.Html![titlePageFile.FileName!] = titlePageFile;
+    book.Content!.AllFiles![titlePageFile.FileName!] = titlePageFile;
 
     // Add info page
     EpubTextContentFile infoPageFile =
@@ -40,6 +45,7 @@ class EpubFileService extends IFileService {
           ..ContentMimeType = 'application/xhtml+xml'
           ..ContentType = EpubContentType.XHTML_1_1;
     book.Content!.Html![infoPageFile.FileName!] = infoPageFile;
+    book.Content!.AllFiles![infoPageFile.FileName!] = infoPageFile;
 
     // Add chapters
     int chapterIndex = 1;
@@ -55,6 +61,7 @@ class EpubFileService extends IFileService {
             ..ContentType = EpubContentType.XHTML_1_1;
 
       book.Content!.Html![chapterFile.FileName!] = chapterFile;
+      book.Content!.AllFiles![chapterFile.FileName!] = chapterFile;
       chapterIndex++;
     }
 
@@ -85,6 +92,20 @@ class EpubFileService extends IFileService {
         ..Title = 'Information'
         ..ContentFileName = infoPageFile.FileName!,
     );
+
+    // Set metadata
+    book.Schema = EpubSchema()..ContentDirectoryPath = 'OEBPS';
+    book.Schema!.Package =
+        EpubPackage()
+          ..Metadata = EpubMetadata()
+          ..Manifest = EpubManifest()
+          ..Spine = EpubSpine()
+          ..Guide = EpubGuide();
+
+    // Set fandom(s) as subjects in metadata
+    book.Schema!.Package!.Metadata!.Subjects =
+        work.fandoms.map((f) => f.name).toList();
+    // Set date published in metadata
 
     // Write to EPUB file
     final epubData = EpubWriter.writeBook(book);
@@ -124,29 +145,58 @@ class EpubFileService extends IFileService {
       final epubBook = await EpubReader.readBook(epubData);
 
       // Extract metadata
-      final workTitle = epubBook.Title ?? 'Untitled';
+      final title = epubBook.Title ?? 'Untitled';
+      // Source URL: epubBook.Schema?.Package?.Metadata?.Identifiers (where Scheme is 'URL') ?? '';
+      final sourceURL = epubBook.Schema?.Package?.Metadata?.Sources?[0] ?? '';
+      final summary = epubBook.Schema?.Package?.Metadata?.Description ?? '';
+      final fandoms =
+          epubBook.Schema?.Package?.Metadata?.Subjects
+              ?.map((f) => FandomModel(name: f))
+              .toList() ??
+          [];
+      final datePublished = DateTime.tryParse(
+        epubBook.Schema?.Package?.Metadata?.Dates?[0].Date ?? '',
+      );
+      final dateUpdated = DateTime.tryParse(
+        epubBook.Schema?.Package?.Metadata?.Dates?[2].Date ?? '',
+      );
+      final authorsMap =
+          epubBook.Schema?.Package?.Metadata?.MetaItems
+              ?.firstOrNullWhere(
+                (meta) => meta.Content?.contains('authors') ?? false,
+              )
+              ?.Content ??
+          ''; // Returns a dictionary as a string
+      // {
+      //    "authors": {
+      //      "author1": "Author One URL",
+      //      "author2": "Author Two URL"
+      //    }
+      // }
+      final authorsDict = json.decode(authorsMap) as Map<String, dynamic>?;
+      final List<AuthorModel> authors = [];
+      authorsDict?['authors']?.entries.forEach((entry) {
+        final authorName = entry.key;
+        final authorURL = entry.value as String?;
+        if (authorName.isNotEmpty) {
+          authors.add(AuthorModel(name: authorName, sourceURL: authorURL));
+        }
+      });
+      final test = authors.runtimeType; // For debugging purposes
 
       // Create WorkModel from EPUB data
-      // final work = WorkModel(
-      //   title: epubBook.Title ?? 'Untitled',
-      //   authors:
-      //       (epubBook.AuthorList ?? [])
-      //           .map((name) => AuthorModel(name: name))
-      //           .toList(),
-      //   chapters: [], // Populate chapters later
-      //   fandoms: [], // Populate fandoms if available
-      //   tags: [], // Populate tags if available
-      //   summary: epubBook.Description,
-      //   status: WorkStatusModel(label: 'Unknown'), // Set default status
-      //   datePublished:
-      //       epubBook.PublishDate != null
-      //           ? DateTime.parse(epubBook.PublishDate!)
-      //           : null,
-      //   dateUpdated:
-      //       epubBook.ModificationDate != null
-      //           ? DateTime.parse(epubBook.ModificationDate!)
-      //           : null,
-      // );
+      final work = WorkModel(
+        title: title,
+        sourceURL: sourceURL,
+        filePath: filePath,
+        summary: summary,
+        fandoms: fandoms,
+        datePublished: datePublished,
+        dateUpdated: dateUpdated,
+        authors: authors,
+      );
+
+      return work;
     } catch (e) {
       logger.e('Failed to load EPUB file: $e');
       return null; // Return null if loading fails

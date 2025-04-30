@@ -1,8 +1,11 @@
 import 'package:dio/dio.dart';
+import 'package:dio_smart_retry/dio_smart_retry.dart';
 import 'package:logger/logger.dart';
+import 'package:path/path.dart' as p;
 import 'package:selene/core/database/models/chapter.dart';
 import 'package:selene/core/database/models/work.dart';
 import 'package:selene/data/local/file_service_registry.dart';
+import 'package:selene/features/settings/screens/data_storage/providers/data_storage_preferences.dart';
 
 abstract class IWorkService {
   // Service metadata
@@ -24,6 +27,7 @@ abstract class IWorkService {
   final Logger logger;
   // Local file services
   final FileServiceRegistry fileServiceRegistry;
+  final DataStoragePreferences dataStoragePrefs;
 
   // Constructor
   IWorkService({
@@ -40,10 +44,18 @@ abstract class IWorkService {
     Dio? dioClient,
     required this.logger,
     required this.fileServiceRegistry,
+    required this.dataStoragePrefs,
   }) : dio = dioClient ?? Dio() {
     dio.options.baseUrl = 'https://$siteDomain';
-    dio.options.headers['User-Agent'] = 'Selene/1.0 (https://selene.app)';
-    dio.interceptors.add(
+    dio.options.headers.addAll({
+      'User-Agent':
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36', // More common browser UA
+      'Accept':
+          'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+      'Accept-Language': 'en-US,en;q=0.9',
+      // Add other headers if needed
+    });
+    dio.interceptors.addAll([
       InterceptorsWrapper(
         onRequest: (options, handler) {
           // Add any request interceptors here if needed
@@ -58,14 +70,21 @@ abstract class IWorkService {
           return handler.next(e);
         },
       ),
-    );
+      RetryInterceptor(
+        dio: dio,
+        retries: 3, // Number of retries on failure
+        retryDelays: const [
+          Duration(seconds: 1),
+          Duration(seconds: 2),
+          Duration(seconds: 3),
+        ],
+      ),
+    ]);
   }
 
   // Methods
   Future<WorkModel?> downloadWork(
-    String sourceURL,
-    String filePath, {
-    bool downloadChapters = false,
+    String sourceURL, {
     Function({int? progress, int? total, String? message})? onProgress,
   });
 
@@ -78,6 +97,7 @@ abstract class IWorkService {
   Future<bool> requiresLogin(String sourceURL, {Response? response});
   Future<bool> tryLogin();
 
+  // Helper methods
   bool isURLValid(String sourceURL) {
     // Use HTTPS scheme as a basic validation check
     if (sourceURL.isEmpty) return false;
@@ -90,5 +110,28 @@ abstract class IWorkService {
     }
     // If no patterns matched, return false
     return false;
+  }
+
+  String determineSavePath(String workTitle, String workId) {
+    final libraryDir = dataStoragePrefs.libraryFolder.get();
+    if (libraryDir.isEmpty) {
+      throw Exception("Library folder is not set in preferences.");
+    }
+    // Sanitize filename (remove invalid characters)
+    String sanitizedTitle =
+        workTitle
+            .replaceAll(RegExp(r'[<>:"/\\|?*]'), '_') // Replace invalid chars
+            .replaceAll(RegExp(r'\s+'), ' ') // Collapse whitespace
+            .trim();
+    if (sanitizedTitle.length > 100) {
+      // Limit length
+      sanitizedTitle = sanitizedTitle.substring(0, 100);
+    }
+    if (sanitizedTitle.isEmpty) {
+      sanitizedTitle = "work_$workId"; // Fallback if title is empty/invalid
+    }
+
+    // Use path package for joining
+    return p.join(libraryDir, '$sanitizedTitle.epub');
   }
 }

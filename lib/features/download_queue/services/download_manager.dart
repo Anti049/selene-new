@@ -9,6 +9,7 @@ import 'package:selene/data/remote/work_service_registry.dart';
 import 'package:selene/core/logging/logger_provider.dart';
 import 'package:selene/features/download_queue/models/download_task.dart';
 import 'package:selene/features/notifications/services/notification_service.dart';
+import 'package:selene/features/settings/screens/data_storage/providers/data_storage_preferences.dart';
 import 'package:selene/features/settings/screens/downloads/providers/download_preferences.dart';
 import '../providers/download_queue_provider.dart';
 // import 'notification_service.dart'; // Import notification service
@@ -182,7 +183,7 @@ class DownloadManager {
 
       // --- Apply Delay and Trigger Next ---
       final delaySeconds =
-          _ref.read(downloadPreferencesProvider).downloadDelaySeconds.get();
+          _ref.read(dataStoragePreferencesProvider).downloadDelaySeconds.get();
       if (_ref.read(downloadQueueProvider).queue.isNotEmpty) {
         _delayTimer?.cancel(); // Cancel any existing timer
         _delayTimer = Timer(Duration(seconds: delaySeconds), () {

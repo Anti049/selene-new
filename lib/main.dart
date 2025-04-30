@@ -8,6 +8,7 @@ import 'package:isar/isar.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import 'package:selene/core/constants/layout_constants.dart';
 import 'package:selene/core/database/providers/isar_provider.dart';
+import 'package:selene/core/database/providers/library_providers.dart';
 import 'package:selene/core/logging/logger_provider.dart';
 import 'package:selene/core/theme/providers/theme_repository_provider.dart';
 import 'package:selene/features/banners/presentation/widgets/banners_container.dart';
@@ -51,6 +52,10 @@ void main() async {
     await container
         .read(themeRepositoryProvider)
         .init(dynamicColor: accentColor);
+
+    // Sync library folder
+    final worksRepository = container.read(worksRepositoryProvider);
+    await worksRepository.syncLibraryOnStartup();
   } catch (e, stackTrace) {
     final logger = container.read(loggerProvider);
     logger.e('Error during app initialization: $e', stackTrace: stackTrace);

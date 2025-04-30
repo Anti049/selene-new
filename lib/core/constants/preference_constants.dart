@@ -46,12 +46,12 @@ const kDefaultPureBlackMode = false;
 // - Settings -> Accounts
 // - Settings -> Reader
 // - Settings -> Downloads
-const kDefaultDownloadDelaySeconds = 2;
 // - Settings -> Tracking
 // - Settings -> Browse
 // - Settings -> Notifications
 // - Settings -> Data & Storage
 const kDefaultLibraryFolder = '';
 const kDefaultImportFolders = <String>[];
+const kDefaultDownloadDelaySeconds = 2;
 // - Settings -> Security & Privacy
 // - Settings -> Advanced

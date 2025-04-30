@@ -54,7 +54,7 @@ class WorkModel with _$WorkModel {
       random.nextInt(3) + 1,
       (_) => FandomModel(
         name: 'Fandom ${random.nextInt(100)}',
-        sourceURL: 'https://example.com/fandom/${random.nextInt(100)}',
+        sourceURLs: ['https://example.com/fandom/${random.nextInt(100)}'],
         aliases: ['Alias ${random.nextInt(10)}'],
       ),
     );

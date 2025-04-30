@@ -134,7 +134,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen>
               for (var fandom in widget.work.fandoms)
                 Hyperlink(
                   fandom.name,
-                  link: fandom.sourceURL,
+                  // link: fandom.sourceURL,
                   style: context.text.headlineSmall?.copyWith(
                     color: context.scheme.primary,
                   ),

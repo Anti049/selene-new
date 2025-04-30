@@ -13,6 +13,7 @@ class AO3WorkService extends IWorkService {
   AO3WorkService({
     required super.logger,
     required super.fileServiceRegistry,
+    required super.dataStoragePrefs,
     super.email = '',
     super.password = '',
     super.dioClient,
@@ -77,9 +78,7 @@ class AO3WorkService extends IWorkService {
   // Methods
   @override
   Future<WorkModel?> downloadWork(
-    String sourceURL,
-    String filePath, {
-    bool downloadChapters = false,
+    String sourceURL, {
     Function({int? progress, int? total, String? message})? onProgress,
   }) async {
     onProgress?.call(message: 'Fetching work metadata...');
@@ -106,13 +105,25 @@ class AO3WorkService extends IWorkService {
         '$workURL/navigate${hasAdultWorks ? '?view_adult=true' : ''}';
 
     // Get metadata body
-    final metaResponse = await dio.get(metadataURL);
+    final metaResponse = await dio.get(
+      metadataURL,
+      onReceiveProgress: (received, total) {
+        if (total > 0) {
+          onProgress?.call(
+            progress: received,
+            total: total,
+            message: 'Fetching work metadata...',
+          );
+        }
+      },
+    );
     if (metaResponse.statusCode != 200) {
       throw Exception(
         'Failed to fetch work metadata: ${metaResponse.statusMessage}',
       );
     }
     final metaSoup = BeautifulSoup(metaResponse.data.toString());
+    onProgress?.call(message: 'Parsing work metadata...');
 
     // Get basic metadata
     try {
@@ -159,7 +170,7 @@ class AO3WorkService extends IWorkService {
                 a.attributes.containsKey('href')
                     ? 'https://$siteDomain${a.attributes['href']}'
                     : '';
-            return FandomModel(name: fandomName, sourceURL: fandomURL);
+            return FandomModel(name: fandomName, sourceURLs: [fandomURL]);
           }).toList() ??
           [];
 
@@ -270,53 +281,56 @@ class AO3WorkService extends IWorkService {
         }
       }
 
-      if (downloadChapters) {
-        final loadedChapters = <ChapterModel>[];
+      final loadedChapters = <ChapterModel>[];
+      onProgress?.call(
+        progress: 0,
+        total: chapters.length,
+        message: 'Downloading chapters...',
+      );
+      // Download each chapter content
+      for (final chapter in chapters) {
+        // Set progress
         onProgress?.call(
-          progress: 0,
+          progress: loadedChapters.length + 1,
           total: chapters.length,
-          message: 'Downloading chapters...',
+          message: 'Downloading chapter ${chapter.index}...',
         );
-        // Download each chapter content
-        for (final chapter in chapters) {
-          // Set progress
-          onProgress?.call(
-            progress: loadedChapters.length + 1,
-            total: chapters.length,
-            message: 'Downloading chapter ${chapter.index}...',
+        // Update chapter content
+        final loadedChapter = await downloadChapter(chapter);
+        if (loadedChapter == null) {
+          logger.w(
+            'Failed to download chapter ${chapter.index} (${chapter.title})',
           );
-          // Update chapter content
-          final loadedChapter = await downloadChapter(chapter);
-          if (loadedChapter == null) {
-            logger.w(
-              'Failed to download chapter ${chapter.index} (${chapter.title})',
-            );
-            continue;
-          }
-          loadedChapters.add(loadedChapter);
+          continue;
         }
-        // Replace chapters by source URL
-        for (final loadedChapter in loadedChapters) {
-          final index = chapters.indexWhere(
-            (c) => c.sourceURL == loadedChapter.sourceURL,
-          );
-          if (index != -1) {
-            chapters[index] = loadedChapter;
-          } else {
-            logger.w(
-              'Loaded chapter ${loadedChapter.index} (${loadedChapter.title}) not found in original chapters.',
-            );
-          }
+        loadedChapters.add(loadedChapter);
+        // Add delay to avoid overwhelming the server
+        final delaySeconds = dataStoragePrefs.downloadDelaySeconds.get();
+        if (delaySeconds > 0) {
+          await Future.delayed(Duration(seconds: delaySeconds));
         }
-        onProgress?.call(
-          progress: chapters.length,
-          total: chapters.length,
-          message: 'All chapters downloaded.',
-        );
       }
+      // Replace chapters by source URL
+      for (final loadedChapter in loadedChapters) {
+        final index = chapters.indexWhere(
+          (c) => c.sourceURL == loadedChapter.sourceURL,
+        );
+        if (index != -1) {
+          chapters[index] = loadedChapter;
+        } else {
+          logger.w(
+            'Loaded chapter ${loadedChapter.index} (${loadedChapter.title}) not found in original chapters.',
+          );
+        }
+      }
+      onProgress?.call(
+        progress: chapters.length,
+        total: chapters.length,
+        message: 'All chapters downloaded.',
+      );
 
       // Return compiled work
-      return WorkModel(
+      final work = WorkModel(
         title: title,
         sourceURL: sourceURL,
         summary: summary,
@@ -329,6 +343,25 @@ class AO3WorkService extends IWorkService {
         wordCount: wordCount,
         chapters: chapters,
       );
+
+      // Save to file
+      final savePath = determineSavePath(work.title, workId!);
+      final epubFileService = fileServiceRegistry.getServiceByExtension(
+        '.epub',
+      );
+      if (epubFileService == null) {
+        logger.e('No EPUB file service found for saving work.');
+        return work; // Return work without saving
+      }
+      final filePath = await epubFileService.saveFile(work, savePath);
+      if (filePath.isEmpty) {
+        logger.e('Failed to save work to file: $savePath');
+        return work; // Return work without file path
+      }
+
+      logger.i('Work saved to file: $filePath');
+      onProgress?.call(message: 'Work saved to file: $filePath');
+      return work.copyWith(filePath: filePath);
     } catch (e) {
       logger.e('Error parsing work metadata: $e');
       return null;

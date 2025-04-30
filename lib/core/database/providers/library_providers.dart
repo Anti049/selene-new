@@ -9,13 +9,13 @@ import 'package:selene/features/settings/screens/data_storage/providers/data_sto
 
 part 'library_providers.g.dart';
 
-@riverpod
+@Riverpod(keepAlive: true)
 WorksRepository worksRepository(Ref ref) {
   // Get dependencies
-  final isar = ref.watch(isarProvider).requireValue;
-  final dataStoragePrefs = ref.watch(dataStoragePreferencesProvider);
-  final fileServiceRegistry = ref.watch(fileServiceRegistryProvider);
-  final logger = ref.watch(loggerProvider);
+  final isar = ref.read(isarProvider).requireValue;
+  final dataStoragePrefs = ref.read(dataStoragePreferencesProvider);
+  final fileServiceRegistry = ref.read(fileServiceRegistryProvider);
+  final logger = ref.read(loggerProvider);
 
   // Create repository
   final repo = WorksRepository(
@@ -26,7 +26,10 @@ WorksRepository worksRepository(Ref ref) {
   );
 
   // Dispose of the repository when the provider is disposed
-  ref.onDispose(() => repo.dispose());
+  ref.onDispose(() {
+    repo.dispose();
+    logger.d('WorksRepository disposed');
+  });
 
   // Return the repository
   return repo;

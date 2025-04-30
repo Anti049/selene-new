@@ -11,7 +11,7 @@ class FandomMapper {
     return FandomModel(
       id: fandom.id,
       name: fandom.name,
-      sourceURL: fandom.sourceURL,
+      sourceURLs: fandom.sourceURLs ?? [],
       aliases: fandom.aliases ?? [],
     );
   }
@@ -27,7 +27,7 @@ class FandomMapper {
     // Note: The id is set to null here. It will be set by Isar when the entity is saved.
     final fandomEntity = Fandom(
       name: fandomModel.name,
-      sourceURL: fandomModel.sourceURL,
+      sourceURLs: fandomModel.sourceURLs,
       aliases: fandomModel.aliases,
     );
 

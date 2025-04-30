@@ -60,7 +60,6 @@ class _AddWorkDialogState extends ConsumerState<AddWorkDialog> {
     try {
       final work = await workService.downloadWork(
         url,
-        dataStoragePrefs.libraryFolder.get(),
         onProgress: _setProgress,
       );
       setState(() {
@@ -139,16 +138,9 @@ class _AddWorkDialogState extends ConsumerState<AddWorkDialog> {
                   children: [
                     Padding(
                       padding: const EdgeInsets.only(bottom: 8.0),
-                      child: TweenAnimationBuilder(
-                        tween: Tween<double>(begin: 0.0, end: _progress ?? 0.0),
-                        duration: kAnimationDuration,
-                        curve: kAnimationCurve,
-                        builder: (context, value, child) {
-                          return LinearProgressIndicator(
-                            value: value,
-                            backgroundColor: context.scheme.outlineVariant,
-                          );
-                        },
+                      child: LinearProgressIndicator(
+                        value: _progress,
+                        backgroundColor: context.scheme.outlineVariant,
                       ),
                     ),
                     Text(

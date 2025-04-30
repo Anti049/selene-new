@@ -10,7 +10,7 @@ class FandomModel with _$FandomModel {
   const factory FandomModel({
     int? id,
     required String name,
-    String? sourceURL,
+    @Default([]) List<String> sourceURLs,
     @Default([]) List<WorkModel> works,
     @Default([]) List<String> aliases,
   }) = _FandomModel;

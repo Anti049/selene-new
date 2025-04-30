@@ -32,6 +32,14 @@ class DataStoragePreferences {
     getter: (prefs) => prefs.importFolders,
     setter: (prefs, value) => prefs.copyWith(importFolders: value),
   );
+
+  late final Preference<int> downloadDelaySeconds = Preference<int>(
+    isar: _isar,
+    defaultValue: kDefaultDownloadDelaySeconds,
+    getter:
+        (prefs) => prefs.downloadDelaySeconds ?? kDefaultDownloadDelaySeconds,
+    setter: (prefs, value) => prefs.copyWith(downloadDelaySeconds: value),
+  );
 }
 
 @riverpod

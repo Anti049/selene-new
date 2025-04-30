@@ -4,6 +4,7 @@ import 'package:selene/core/logging/logger_provider.dart';
 import 'package:selene/data/local/file_service_registry.dart';
 import 'package:selene/data/remote/ao3_work_service.dart';
 import 'package:selene/data/remote/i_work_service.dart';
+import 'package:selene/features/settings/screens/data_storage/providers/data_storage_preferences.dart';
 
 part 'work_service_registry.g.dart';
 
@@ -25,13 +26,19 @@ class WorkServiceRegistry {
 
 @riverpod
 WorkServiceRegistry workServiceRegistry(Ref ref) {
+  // Get dependencies
   final fileServiceRegistry = ref.watch(fileServiceRegistryProvider);
+  final dataStoragePrefs = ref.watch(dataStoragePreferencesProvider);
   // Ensure the file service registry is initialized before creating work services
   if (fileServiceRegistry.services.isEmpty) {
     throw Exception('File service registry is not initialized.');
   }
   final logger = ref.watch(loggerProvider);
   return WorkServiceRegistry([
-    AO3WorkService(logger: logger, fileServiceRegistry: fileServiceRegistry),
+    AO3WorkService(
+      logger: logger,
+      fileServiceRegistry: fileServiceRegistry,
+      dataStoragePrefs: dataStoragePrefs,
+    ),
   ]);
 }

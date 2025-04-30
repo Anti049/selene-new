@@ -153,7 +153,7 @@ class _LibraryComponentItemState extends ConsumerState<LibraryComponentItem> {
                             style: context.text.titleMedium?.copyWith(
                               color:
                                   widget.isSelected
-                                      ? context.scheme.onPrimaryContainer
+                                      ? context.scheme.primary
                                       : context.scheme.onSurface,
                             ),
                           ),
@@ -166,8 +166,9 @@ class _LibraryComponentItemState extends ConsumerState<LibraryComponentItem> {
                                 fill: 1.0,
                                 color:
                                     widget.isSelected
-                                        ? context.scheme.onPrimaryContainer
-                                            .withValues(alpha: 0.7)
+                                        ? context.scheme.primary.withValues(
+                                          alpha: 0.7,
+                                        )
                                         : context.scheme.onSurfaceVariant,
                                 size: 16.0,
                               ),
@@ -177,8 +178,9 @@ class _LibraryComponentItemState extends ConsumerState<LibraryComponentItem> {
                                   style: context.text.labelMedium?.copyWith(
                                     color:
                                         widget.isSelected
-                                            ? context.scheme.onPrimaryContainer
-                                                .withValues(alpha: 0.7)
+                                            ? context.scheme.primary.withValues(
+                                              alpha: 0.7,
+                                            )
                                             : context.scheme.onSurfaceVariant,
                                   ),
                                   maxLines: 1,
@@ -196,8 +198,9 @@ class _LibraryComponentItemState extends ConsumerState<LibraryComponentItem> {
                                 fill: 1.0,
                                 color:
                                     widget.isSelected
-                                        ? context.scheme.onPrimaryContainer
-                                            .withValues(alpha: 0.7)
+                                        ? context.scheme.primary.withValues(
+                                          alpha: 0.7,
+                                        )
                                         : context.scheme.onSurfaceVariant,
                                 size: 16.0,
                               ),
@@ -207,8 +210,9 @@ class _LibraryComponentItemState extends ConsumerState<LibraryComponentItem> {
                                   style: context.text.labelSmall?.copyWith(
                                     color:
                                         widget.isSelected
-                                            ? context.scheme.onPrimaryContainer
-                                                .withValues(alpha: 0.7)
+                                            ? context.scheme.primary.withValues(
+                                              alpha: 0.7,
+                                            )
                                             : context.scheme.onSurfaceVariant,
                                   ),
                                   maxLines: 1,

@@ -11,13 +11,12 @@ class Fandom {
   @Index()
   late String name;
 
-  @Index(unique: true, caseSensitive: false)
-  String? sourceURL;
+  List<String>? sourceURLs;
 
   @Backlink(to: 'fandoms')
   final works = IsarLinks<Work>();
 
   List<String>? aliases = [];
 
-  Fandom({required this.name, this.sourceURL, this.aliases = const []});
+  Fandom({required this.name, this.sourceURLs, this.aliases = const []});
 }

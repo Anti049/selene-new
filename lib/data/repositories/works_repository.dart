@@ -66,6 +66,39 @@ class WorksRepository {
     _fileSystemChangeController.close();
   }
 
+  // Sync the library on startup
+  Future<void> syncLibraryOnStartup() async {
+    _logger.i('Syncing library on startup...');
+
+    // Get the library folder from preferences
+    final libraryFolder = _dataStoragePrefs.libraryFolder.get();
+    if (libraryFolder.isEmpty) {
+      _logger.w('Library folder is not set. Skipping library sync.');
+      return;
+    }
+    if (!Directory(libraryFolder).existsSync()) {
+      _logger.w(
+        'Library folder does not exist: $libraryFolder. Skipping library sync.',
+      );
+      return;
+    }
+    _logger.i('Syncing library from folder: $libraryFolder');
+
+    // Get all files in the library folder
+    final directory = Directory(libraryFolder);
+    final files = directory.listSync(recursive: true, followLinks: false);
+
+    // Process each file
+    for (final file in files) {
+      if (file is File &&
+          _fileServiceRegistry.allAcceptedExtensions.contains(
+            p.extension(file.path).toLowerCase(),
+          )) {
+        await _handleFileAdd(file.path);
+      }
+    }
+  }
+
   // Initialize directory watcher for the library folder
   void _initDirectoryWatcher() {
     // Cancel existing subscription if it exists
@@ -130,16 +163,6 @@ class WorksRepository {
       _directoryWatcherSubscription = null;
       Future.delayed(const Duration(seconds: 15), _initDirectoryWatcher);
     }
-
-    // Create a new DirectoryWatcher for the library folder
-    final watcher = DirectoryWatcher(_dataStoragePrefs.libraryFolder.get());
-    // Listen to file system events
-    _directoryWatcherSubscription = watcher.events.listen((event) {
-      // Add event to the controller
-      _fileSystemChangeController.add(null);
-      // Log the event
-      _logger.i('File system event: ${event.type} at ${event.path}');
-    });
   }
 
   Future<void> _handleFileAdd(String filePath) async {
@@ -568,13 +591,11 @@ class WorksRepository {
     }
     // Try finding by unique property if not found by ID or no ID given
     // (Assuming Fandom has a unique 'sourceURL' or 'name')
-    if (fandomEntity == null && fandomModel.sourceURL != null) {
-      fandomEntity =
-          await _isar.fandoms
-              .filter()
-              .sourceURLEqualTo(fandomModel.sourceURL)
-              .findFirst();
-    }
+    fandomEntity ??=
+        await _isar.fandoms
+            .filter()
+            .nameEqualTo(fandomModel.name, caseSensitive: false)
+            .findFirst();
     // If still not found, create and save a new one
     if (fandomEntity == null) {
       fandomEntity = FandomMapper.mapToTable(fandomModel);
@@ -582,8 +603,11 @@ class WorksRepository {
       await _isar.fandoms.put(fandomEntity);
     } else {
       // Optionally: Update existing entity if model has newer data?
-      // authorEntity = AuthorMapper.updateEntityFromModel(authorEntity, model);
-      // await _isar.authors.put(authorEntity);
+      // fandomEntity = FandomMapper.updateEntityFromModel(
+      //   fandomEntity,
+      //   fandomModel,
+      // );
+      // await _isar.fandoms.put(fandomEntity); // Not needed if only updating fields
     }
     return fandomEntity;
   }

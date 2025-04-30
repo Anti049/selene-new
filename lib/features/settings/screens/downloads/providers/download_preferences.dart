@@ -11,14 +11,6 @@ part 'download_preferences.g.dart';
 class DownloadPreferences {
   final Isar _isar;
   DownloadPreferences(this._isar);
-
-  late final Preference<int> downloadDelaySeconds = Preference<int>(
-    isar: _isar,
-    defaultValue: kDefaultDownloadDelaySeconds,
-    getter:
-        (prefs) => prefs.downloadDelaySeconds ?? kDefaultDownloadDelaySeconds,
-    setter: (prefs, value) => prefs.copyWith(downloadDelaySeconds: value),
-  );
   // Add other download-related preferences here
 }
 
