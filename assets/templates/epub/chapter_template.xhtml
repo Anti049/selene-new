@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <head>
+    <title>{{chapter_title}}</title>
+    <link href="stylesheet.css" type="text/css" rel="stylesheet"/>
+    <meta name="chapter-url" content="{{chapter_url}}"/>
+    <meta name="chapter-index" content="{{chapter_index}}"/>
+  </head>
+  <body class="chapter-page">
+    <h3 class="chapter-title">{{chapter_title}}</h3>
+    {{#chapter_summary}}
+    <div class="chapter-summary"><b>Summary:</b> {{{chapter_summary}}}</div><p><hr/></p>
+    {{/chapter_summary}}
+    {{#chapter_start_notes}}
+    <div class="chapter-start-notes"><b>Start Notes:</b><blockquote>{{{chapter_start_notes}}}</blockquote></div><p><hr/></p>
+    {{/chapter_start_notes}}
+    <div class="chapter-content">
+      {{{chapter_content}}}
+    </div>
+    {{#chapter_end_notes}}
+    <p><hr/></p><div class="chapter-end-notes"><b>End Notes:</b><blockquote>{{{chapter_end_notes}}}</blockquote></div>
+    {{/chapter_end_notes}}
+    <hr/>
+    <footer class="chapter-footer">
+      <p>Chapter {{chapter_index}} of {{work_title}}</p>
+      <p>Published on: {{chapter_date_published}}</p>
+    </footer>
+  </body>
+</html>

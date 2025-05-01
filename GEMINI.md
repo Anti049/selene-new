@@ -183,6 +183,12 @@ My current objectives are the following:
 
 -   Works
 
+    -   Hosted on various fanfiction sites (AO3, FFN, etc.)
+    -   Will be scraped for metadata and content
+        -   Sites my be protected by Cloudflare, so the application will need to handle that
+            -   The application will primarily run on Android, so the approach needs to account for that
+            -   Could possibly is an in-app webview (maybe headless?) to scrape the content on CloudFlare-protected sites
+            -   Might also hook into a remote FlareSolverr instance to handle CloudFlare protection
     -   Metadata
         -   Stored in the database
         -   Defined as:
@@ -298,6 +304,10 @@ My current objectives are the following:
         -   Fandom
         -   Tags
         -   Series
+    -   Users can select works to perform bulk actions
+        -   Selection mode can be enabled by long-pressing a work
+        -   In selection mode, tapping a work adds/removes it from the selection
+        -   In selection mode, long-pressing a work selects it and all works between it and the last selected work
     -   Users can view detailed information about each work
         -   This will include the metadata defined above
         -   Users can click on a work to open it in the reader

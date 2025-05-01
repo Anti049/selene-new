@@ -27,6 +27,8 @@ dependencies:
     draggable_menu: ^4.4.1
     # dynamic_color: ^1.7.0
     easy_refresh: ^3.4.0
+    ebook:
+        git: https://github.com/Anti049/ebook.git
     file_picker: 10.1.0
     # firebase_analytics: ^11.4.5
     # firebase_crashlytics: ^4.3.5
@@ -47,6 +49,7 @@ dependencies:
     # googleapis: ^14.0.0
     hooks_riverpod: ^2.6.1
     # infinite_scroll_pagination: ^5.0.0
+    html_unescape: ^2.0.0
     isar:
         version: 3.1.8
         hosted: https://pub.isar-community.dev/
@@ -59,6 +62,7 @@ dependencies:
     material_symbols_icons: ^4.2811.0
     meta: ^1.16.0
     # package_info_plus: ^8.3.0
+    mustache_template: ^2.0.0
     path: ^1.9.1
     path_provider: ^2.1.5
     percent_indicator: ^4.2.5
@@ -80,6 +84,7 @@ dependencies:
             ref: refactor/deprecate-registrar
     watcher: ^1.1.1
     webview_flutter: ^4.11.0
+    xml: ^6.5.0
 
 dev_dependencies:
     auto_route_generator: ^9.0.0
@@ -107,6 +112,8 @@ flutter:
         - assets/images/
         - assets/launcher/
         - assets/splash/
+        - assets/templates/
+        - assets/templates/epub/
 
 package_rename_config:
     android:

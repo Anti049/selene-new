@@ -11,6 +11,7 @@ import 'package:selene/core/utils/theming.dart';
 import 'package:selene/features/library/presentation/widgets/tag_chip.dart';
 import 'package:selene/features/library/providers/library_preferences.dart';
 import 'package:selene/routing/router.gr.dart';
+import 'package:selene/data/local/file_service_registry.dart';
 
 class LibraryComponentItem extends ConsumerStatefulWidget {
   const LibraryComponentItem({

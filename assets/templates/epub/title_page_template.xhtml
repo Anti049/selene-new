@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+	<head>
+		<title>{{title}}</title>
+		<link href="stylesheet.css" type="text/css" rel="stylesheet" />
+	</head>
+	<body class="title-page">
+		<div class="work-header">
+			<h3><a href="{{url}}">{{title}}</a></h3>
+			<p>by</p>
+			<h2>
+				{{#authors}}
+				<a href="{{url}}">{{name}}</a><br />
+				{{/authors}}
+			</h2>
+		</div>
+		<div class="work-details">
+			<div class="work-fandoms">
+				<h4>Fandoms:</h4>
+				<p>
+					{{#fandoms}}
+					<a href="{{url}}">{{name}}</a><br />
+					{{/fandoms}}
+				</p>
+			</div>
+			<div class="work-series">
+				{{#series}}
+				<h4>Series:</h4>
+				<p><a href="{{url}}">{{name}}</a><br /></p>
+				{{/series}}
+			</div>
+			<div class="work-summary">
+				<b>Summary:</b>
+				<div>{{{summary_html}}}</div>
+			</div>
+			<div class="work-statistics">
+				<b>Word Count:</b> {{word_count}}
+				<b>Status:</b> {{status_label}}
+				<b>Published:</b> {{date_published}}
+				<b>Updated:</b> {{date_updated}}
+			</div>
+		</div>
+	</body>
+</html>
