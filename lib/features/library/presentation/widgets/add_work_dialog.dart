@@ -192,7 +192,7 @@ class _AddWorkDialogState extends ConsumerState<AddWorkDialog> {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                             content: Text('Failed to add work from URL.'),
-                            duration: Duration(seconds: 3),
+                            duration: Duration(seconds: 15),
                             behavior: SnackBarBehavior.floating,
                           ),
                         );

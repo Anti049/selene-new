@@ -20,443 +20,452 @@ class EpubFileService extends IFileService {
   // Methods
   @override
   Future<String> saveFile(WorkModel work, String filePath) async {
-    // Create book
-    var archive = Archive();
-    final mimetypeUTF8 = utf8.encode('application/epub+zip');
-    archive.addFile(ArchiveFile('mimetype', mimetypeUTF8.length, mimetypeUTF8));
+    try {
+      // Create book
+      var archive = Archive();
+      final mimetypeUTF8 = utf8.encode('application/epub+zip');
+      archive.addFile(
+        ArchiveFile('mimetype', mimetypeUTF8.length, mimetypeUTF8),
+      );
 
-    // Create META-INF/container.xml
-    final containerXml = xml.XmlBuilder();
-    containerXml.processing('xml', 'version="1.0" encoding="UTF-8"');
-    containerXml.element(
-      'container',
-      attributes: {
-        'version': '1.0',
-        'xmlns': 'urn:oasis:names:tc:opendocument:xmlns:container',
-      },
-      nest: () {
-        containerXml.element(
-          'rootfiles',
-          nest: () {
-            containerXml.element(
-              'rootfile',
-              attributes: {
-                'full-path': 'OEBPS/content.opf',
-                'media-type': 'application/oebps-package+xml',
-              },
-            );
-          },
-        );
-      },
-    );
-    final containerXmlString = containerXml.buildDocument().toXmlString(
-      pretty: true,
-    );
-    archive.addFile(
-      ArchiveFile(
-        'META-INF/container.xml',
-        utf8.encode(containerXmlString).length,
-        utf8.encode(containerXmlString),
-      ),
-    );
+      // Create META-INF/container.xml
+      final containerXml = xml.XmlBuilder();
+      containerXml.processing('xml', 'version="1.0" encoding="UTF-8"');
+      containerXml.element(
+        'container',
+        attributes: {
+          'version': '1.0',
+          'xmlns': 'urn:oasis:names:tc:opendocument:xmlns:container',
+        },
+        nest: () {
+          containerXml.element(
+            'rootfiles',
+            nest: () {
+              containerXml.element(
+                'rootfile',
+                attributes: {
+                  'full-path': 'OEBPS/content.opf',
+                  'media-type': 'application/oebps-package+xml',
+                },
+              );
+            },
+          );
+        },
+      );
+      final containerXmlString = containerXml.buildDocument().toXmlString(
+        pretty: true,
+      );
+      archive.addFile(
+        ArchiveFile(
+          'META-INF/container.xml',
+          utf8.encode(containerXmlString).length,
+          utf8.encode(containerXmlString),
+        ),
+      );
 
-    // Create OEBPS/content.opf
-    final contentOpf = xml.XmlBuilder();
-    contentOpf.processing('xml', 'version="1.0" encoding="UTF-8"');
-    contentOpf.element(
-      'package',
-      nest: () {
-        contentOpf.attribute('version', '3.0');
-        contentOpf.attribute('xmlns', 'http://www.idpf.org/2007/opf');
-        contentOpf.element(
-          'metadata',
-          nest: () {
-            // Attributes for metadata
-            contentOpf.attribute(
-              'xmlns:dc',
-              'http://purl.org/dc/elements/1.1/',
-            );
-            contentOpf.attribute('xmlns:opf', 'http://www.idpf.org/2007/opf');
-            // Add metadata elements
-            // - Identifier
-            contentOpf.element(
-              'dc:identifier',
-              nest: 'selene-uid:${work.id}',
-              attributes: {'id': 'selene-uid'},
-            );
-            // - Title
-            contentOpf.element('dc:title', nest: work.title);
-            // - Source URL
-            if (work.sourceURL != null) {
-              contentOpf.element('dc:source', nest: work.sourceURL!);
+      // Create OEBPS/content.opf
+      final contentOpf = xml.XmlBuilder();
+      contentOpf.processing('xml', 'version="1.0" encoding="UTF-8"');
+      contentOpf.element(
+        'package',
+        nest: () {
+          contentOpf.attribute('version', '3.0');
+          contentOpf.attribute('xmlns', 'http://www.idpf.org/2007/opf');
+          contentOpf.element(
+            'metadata',
+            nest: () {
+              // Attributes for metadata
+              contentOpf.attribute(
+                'xmlns:dc',
+                'http://purl.org/dc/elements/1.1/',
+              );
+              contentOpf.attribute('xmlns:opf', 'http://www.idpf.org/2007/opf');
+              // Add metadata elements
+              // - Identifier
               contentOpf.element(
                 'dc:identifier',
-                nest: work.sourceURL!,
-                attributes: {'opf:scheme': 'URL', 'id': 'source-url'},
+                nest: 'selene-uid:${work.id}',
+                attributes: {'id': 'selene-uid'},
               );
-            }
-            // - Authors
-            for (var author in work.authors) {
-              // Author name and URL (in a single element)
-              contentOpf.element(
-                'dc:creator',
-                nest: () {
-                  contentOpf.attribute('opf:role', 'aut'); // Author role
-                  contentOpf.text(author.name);
-                  if (author.sourceURL != null) {
-                    contentOpf.attribute('opf:file-as', author.sourceURL!);
-                  }
-                },
-              );
-            }
-            // - Summary (note that the summary is an HTML string that needs to be nested inside XML tags)
-            if (work.summary != null) {
-              contentOpf.element('dc:description', nest: work.summary!);
-            }
-            // - Fandom(s)
-            for (var fandom in work.fandoms) {
-              contentOpf.element(
-                'dc:subject',
-                nest: fandom.name,
-                attributes: {
-                  'opf:file-as':
-                      fandom.sourceURLs.isNotEmpty
-                          ? fandom.sourceURLs.first
-                          : fandom.name,
-                },
-              );
-            }
-            // - Tags (need to be NOT dc:subject tags, but custom meta tags)
-            for (var tag in work.tags) {
-              contentOpf.element(
-                'meta',
-                nest: tag.name,
-                attributes: {
-                  'name': 'selene-tag-${tag.type.name.toLowerCase()}',
-                  'content': tag.name,
-                  'type': tag.type.name.toLowerCase(),
-                  'opf:file-as': tag.sourceURL ?? tag.name,
-                  'href': tag.sourceURL ?? '',
-                },
-              );
-            }
-            // - Date File Created
-            contentOpf.element(
-              'dc:date',
-              nest: DateTime.now().toIso8601String(),
-              attributes: {'opf:event': 'creation'},
-            );
-            // - Date Published
-            if (work.datePublished != null) {
-              contentOpf.element(
-                'dc:date',
-                nest: work.datePublished!.toIso8601String(),
-                attributes: {'opf:event': 'publication'},
-              );
-            }
-            // - Date Updated
-            if (work.dateUpdated != null) {
+              // - Title
+              contentOpf.element('dc:title', nest: work.title);
+              // - Source URL
+              if (work.sourceURL != null) {
+                contentOpf.element('dc:source', nest: work.sourceURL!);
+                contentOpf.element(
+                  'dc:identifier',
+                  nest: work.sourceURL!,
+                  attributes: {'opf:scheme': 'URL', 'id': 'source-url'},
+                );
+              }
+              // - Authors
+              for (var author in work.authors) {
+                // Author name and URL (in a single element)
+                contentOpf.element(
+                  'dc:creator',
+                  nest: () {
+                    contentOpf.attribute('opf:role', 'aut'); // Author role
+                    contentOpf.text(author.name);
+                    if (author.sourceURL != null) {
+                      contentOpf.attribute('opf:file-as', author.sourceURL!);
+                    }
+                  },
+                );
+              }
+              // - Summary (note that the summary is an HTML string that needs to be nested inside XML tags)
+              if (work.summary != null) {
+                contentOpf.element('dc:description', nest: work.summary!);
+              }
+              // - Fandom(s)
+              for (var fandom in work.fandoms) {
+                contentOpf.element(
+                  'dc:subject',
+                  nest: fandom.name,
+                  attributes: {
+                    'opf:file-as':
+                        fandom.sourceURLs.isNotEmpty
+                            ? fandom.sourceURLs.first
+                            : fandom.name,
+                  },
+                );
+              }
+              // - Tags (need to be NOT dc:subject tags, but custom meta tags)
+              for (var tag in work.tags) {
+                contentOpf.element(
+                  'meta',
+                  nest: tag.name,
+                  attributes: {
+                    'name': 'selene-tag-${tag.type.name.toLowerCase()}',
+                    'content': tag.name,
+                    'type': tag.type.name.toLowerCase(),
+                    'opf:file-as': tag.sourceURL ?? tag.name,
+                    'href': tag.sourceURL ?? '',
+                  },
+                );
+              }
+              // - Date File Created
               contentOpf.element(
                 'dc:date',
-                nest: work.dateUpdated!.toIso8601String(),
-                attributes: {'opf:event': 'update'},
+                nest: DateTime.now().toIso8601String(),
+                attributes: {'opf:event': 'creation'},
               );
-            }
-            // - Language
-            contentOpf.element(
-              'dc:language',
-              nest: 'en', // Default to English; can be changed later
-            );
-            // - Work Status
-            contentOpf.element(
-              'meta',
-              nest: work.status.label,
-              attributes: {
-                'name': 'selene-work-status',
-                'content': work.status.label,
-              },
-            );
-            // - Cover Image (if available)
-            if (work.coverURL != null) {
+              // - Date Published
+              if (work.datePublished != null) {
+                contentOpf.element(
+                  'dc:date',
+                  nest: work.datePublished!.toIso8601String(),
+                  attributes: {'opf:event': 'publication'},
+                );
+              }
+              // - Date Updated
+              if (work.dateUpdated != null) {
+                contentOpf.element(
+                  'dc:date',
+                  nest: work.dateUpdated!.toIso8601String(),
+                  attributes: {'opf:event': 'update'},
+                );
+              }
+              // - Language
+              contentOpf.element(
+                'dc:language',
+                nest: 'en', // Default to English; can be changed later
+              );
+              // - Work Status
               contentOpf.element(
                 'meta',
-                nest: work.coverURL!,
+                nest: work.status.label,
                 attributes: {
-                  'name': 'selene-cover-image',
-                  'content': work.coverURL!,
+                  'name': 'selene-work-status',
+                  'content': work.status.label,
                 },
               );
-            }
-            // - Word Count
-            if (work.wordCount != null) {
-              contentOpf.element(
-                'meta',
-                nest: work.wordCount.toString(),
-                attributes: {
-                  'name': 'selene-word-count',
-                  'content': work.wordCount.toString(),
-                },
-              );
-            }
-          },
-        );
-        contentOpf.element(
-          'manifest',
-          nest: () {
-            // Add manifest items for each file
+              // - Cover Image (if available)
+              if (work.coverURL != null) {
+                contentOpf.element(
+                  'meta',
+                  nest: work.coverURL!,
+                  attributes: {
+                    'name': 'selene-cover-image',
+                    'content': work.coverURL!,
+                  },
+                );
+              }
+              // - Word Count
+              if (work.wordCount != null) {
+                contentOpf.element(
+                  'meta',
+                  nest: work.wordCount.toString(),
+                  attributes: {
+                    'name': 'selene-word-count',
+                    'content': work.wordCount.toString(),
+                  },
+                );
+              }
+            },
+          );
+          contentOpf.element(
+            'manifest',
+            nest: () {
+              // Add manifest items for each file
 
-            // TOC file
-            contentOpf.element(
-              'item',
-              attributes: {
-                'id': 'toc',
-                'href': 'toc.ncx',
-                'media-type': 'application/x-dtbncx+xml',
-              },
-            );
-
-            // Stylesheet
-            contentOpf.element(
-              'item',
-              attributes: {
-                'id': 'stylesheet',
-                'href': 'stylesheet.css',
-                'media-type': 'text/css',
-              },
-            );
-
-            // Title page
-            contentOpf.element(
-              'item',
-              attributes: {
-                'id': 'title-page',
-                'href': 'title.xhtml',
-                'media-type': 'application/xhtml+xml',
-              },
-            );
-            // TODO: Implement info page
-            // contentOpf.element(
-            //   'item',
-            //   attributes: {
-            //     'id': 'info-page',
-            //     'href': 'info.xhtml',
-            //     'media-type': 'application/xhtml+xml',
-            //   },
-            // );
-            // Add chapters here
-            for (var chapter in work.chapters) {
-              final fileIndex = chapter.index.toString().padLeft(
-                4,
-                '0',
-              ); // e.g., chapter-0001
+              // TOC file
               contentOpf.element(
                 'item',
                 attributes: {
-                  'id': 'chapter-$fileIndex',
-                  'href': 'chapter-$fileIndex.xhtml',
+                  'id': 'toc',
+                  'href': 'toc.ncx',
+                  'media-type': 'application/x-dtbncx+xml',
+                },
+              );
+
+              // Stylesheet
+              contentOpf.element(
+                'item',
+                attributes: {
+                  'id': 'stylesheet',
+                  'href': 'stylesheet.css',
+                  'media-type': 'text/css',
+                },
+              );
+
+              // Title page
+              contentOpf.element(
+                'item',
+                attributes: {
+                  'id': 'title-page',
+                  'href': 'title.xhtml',
                   'media-type': 'application/xhtml+xml',
                 },
               );
-            }
-          },
-        );
-        contentOpf.element(
-          'spine',
-          nest: () {
-            // Define the spine items (the reading order)
-            contentOpf.element(
-              'itemref',
-              attributes: {'idref': 'title-page', 'linear': 'yes'},
-            );
-            // contentOpf.element(
-            //   'itemref',
-            //   attributes: {'idref': 'info-page', 'linear': 'yes'},
-            // );
-            // Add chapters here
-            for (var chapter in work.chapters) {
-              final fileIndex = chapter.index.toString().padLeft(
-                4,
-                '0',
-              ); // e.g., chapter-0001
-              contentOpf.element(
-                'itemref',
-                attributes: {'idref': 'chapter-$fileIndex', 'linear': 'yes'},
-              );
-            }
-          },
-        );
-      },
-    );
-    final contentOpfXml = contentOpf.buildDocument().toXmlString(pretty: true);
-    archive.addFile(
-      ArchiveFile(
-        'OEBPS/content.opf',
-        utf8.encode(contentOpfXml).length,
-        utf8.encode(contentOpfXml),
-      ),
-    );
-
-    // Create OEBPS/toc.ncx (Table of Contents)
-    final tocNcx = xml.XmlBuilder();
-    tocNcx.processing('xml', 'version="1.0" encoding="UTF-8"');
-    tocNcx.element(
-      'ncx',
-      attributes: {
-        'xmlns': 'http://www.daisy.org/z3986/2005/ncx/',
-        'version': '2005-1',
-      },
-      nest: () {
-        tocNcx.element(
-          'head',
-          nest: () {
-            tocNcx.element(
-              'meta',
-              attributes: {'name': 'dtb:uid', 'content': work.id.toString()},
-            );
-            tocNcx.element(
-              'meta',
-              attributes: {'name': 'dtb:depth', 'content': '1'},
-            );
-            tocNcx.element(
-              'meta',
-              attributes: {'name': 'dtb:totalPageCount', 'content': '0'},
-            );
-            tocNcx.element(
-              'meta',
-              attributes: {'name': 'dtb:maxPageNumber', 'content': '0'},
-            );
-          },
-        );
-        tocNcx.element(
-          'docTitle',
-          nest: () {
-            tocNcx.element('text', nest: work.title);
-          },
-        );
-        tocNcx.element(
-          'navMap',
-          nest: () {
-            // Add title page entry
-            tocNcx.element(
-              'navPoint',
-              attributes: {'id': 'title-page', 'playOrder': '0'},
-              nest: () {
-                tocNcx.element(
-                  'navLabel',
-                  nest: () {
-                    tocNcx.element('text', nest: work.title);
+              // TODO: Implement info page
+              // contentOpf.element(
+              //   'item',
+              //   attributes: {
+              //     'id': 'info-page',
+              //     'href': 'info.xhtml',
+              //     'media-type': 'application/xhtml+xml',
+              //   },
+              // );
+              // Add chapters here
+              for (var chapter in work.chapters) {
+                final fileIndex = chapter.index.toString().padLeft(
+                  4,
+                  '0',
+                ); // e.g., chapter-0001
+                contentOpf.element(
+                  'item',
+                  attributes: {
+                    'id': 'chapter-$fileIndex',
+                    'href': 'chapter-$fileIndex.xhtml',
+                    'media-type': 'application/xhtml+xml',
                   },
                 );
-                tocNcx.element('content', attributes: {'src': 'title.xhtml'});
-              },
-            );
-            // TODO: Add info page entry
-            // tocNcx.element(
-            //   'navPoint',
-            //   attributes: {'id': 'info-page', 'playOrder': '1'},
-            //   nest: () {
-            //     tocNcx.element(
-            //       'navLabel',
-            //       nest: () {
-            //         tocNcx.element('text', nest: 'Information');
-            //       },
-            //     );
-            //     tocNcx.element('content', attributes: {'src': 'info.xhtml'});
-            //   },
-            // );
-            // Add chapters
-            for (var chapter in work.chapters) {
-              final fileIndex = chapter.index.toString().padLeft(
-                4,
-                '0',
-              ); // e.g., chapter-0001
+              }
+            },
+          );
+          contentOpf.element(
+            'spine',
+            nest: () {
+              // Define the spine items (the reading order)
+              contentOpf.element(
+                'itemref',
+                attributes: {'idref': 'title-page', 'linear': 'yes'},
+              );
+              // contentOpf.element(
+              //   'itemref',
+              //   attributes: {'idref': 'info-page', 'linear': 'yes'},
+              // );
+              // Add chapters here
+              for (var chapter in work.chapters) {
+                final fileIndex = chapter.index.toString().padLeft(
+                  4,
+                  '0',
+                ); // e.g., chapter-0001
+                contentOpf.element(
+                  'itemref',
+                  attributes: {'idref': 'chapter-$fileIndex', 'linear': 'yes'},
+                );
+              }
+            },
+          );
+        },
+      );
+      final contentOpfXml = contentOpf.buildDocument().toXmlString(
+        pretty: true,
+      );
+      archive.addFile(
+        ArchiveFile(
+          'OEBPS/content.opf',
+          utf8.encode(contentOpfXml).length,
+          utf8.encode(contentOpfXml),
+        ),
+      );
+
+      // Create OEBPS/toc.ncx (Table of Contents)
+      final tocNcx = xml.XmlBuilder();
+      tocNcx.processing('xml', 'version="1.0" encoding="UTF-8"');
+      tocNcx.element(
+        'ncx',
+        attributes: {
+          'xmlns': 'http://www.daisy.org/z3986/2005/ncx/',
+          'version': '2005-1',
+        },
+        nest: () {
+          tocNcx.element(
+            'head',
+            nest: () {
+              tocNcx.element(
+                'meta',
+                attributes: {'name': 'dtb:uid', 'content': work.id.toString()},
+              );
+              tocNcx.element(
+                'meta',
+                attributes: {'name': 'dtb:depth', 'content': '1'},
+              );
+              tocNcx.element(
+                'meta',
+                attributes: {'name': 'dtb:totalPageCount', 'content': '0'},
+              );
+              tocNcx.element(
+                'meta',
+                attributes: {'name': 'dtb:maxPageNumber', 'content': '0'},
+              );
+            },
+          );
+          tocNcx.element(
+            'docTitle',
+            nest: () {
+              tocNcx.element('text', nest: work.title);
+            },
+          );
+          tocNcx.element(
+            'navMap',
+            nest: () {
+              // Add title page entry
               tocNcx.element(
                 'navPoint',
-                attributes: {
-                  'id': 'chapter-$fileIndex',
-                  'playOrder': '${chapter.index + 1}',
-                },
+                attributes: {'id': 'title-page', 'playOrder': '0'},
                 nest: () {
                   tocNcx.element(
                     'navLabel',
                     nest: () {
-                      tocNcx.element('text', nest: chapter.title);
+                      tocNcx.element('text', nest: work.title);
                     },
                   );
-                  tocNcx.element(
-                    'content',
-                    attributes: {'src': 'chapter-$fileIndex.xhtml'},
-                  );
+                  tocNcx.element('content', attributes: {'src': 'title.xhtml'});
                 },
               );
-            }
-          },
-        );
-      },
-    );
-    final tocNcxXml = tocNcx.buildDocument().toXmlString(pretty: true);
-    archive.addFile(
-      ArchiveFile(
-        'OEBPS/toc.ncx',
-        utf8.encode(tocNcxXml).length,
-        utf8.encode(tocNcxXml),
-      ),
-    );
-
-    // Add title page
-    final titleHTML = await _generateTitlePageHtml(work);
-    archive.addFile(
-      ArchiveFile(
-        'OEBPS/title.xhtml',
-        utf8.encode(titleHTML).length,
-        utf8.encode(titleHTML),
-      ),
-    );
-
-    // TODO: Add info page
-    // archive.addFile(
-    //   ArchiveFile(
-    //     'OEBPS/info.xhtml',
-    //     _generateInfoPageHtml(work).length,
-    //     utf8.encode(_generateInfoPageHtml(work)),
-    //   ),
-    // );
-
-    // Add chapters
-    for (var chapter in work.chapters) {
-      final fileIndex = chapter.index.toString().padLeft(
-        4,
-        '0',
-      ); // e.g., chapter-0001
-      final chapterHTML = await _generateChapterHtml(chapter, work.title);
+              // TODO: Add info page entry
+              // tocNcx.element(
+              //   'navPoint',
+              //   attributes: {'id': 'info-page', 'playOrder': '1'},
+              //   nest: () {
+              //     tocNcx.element(
+              //       'navLabel',
+              //       nest: () {
+              //         tocNcx.element('text', nest: 'Information');
+              //       },
+              //     );
+              //     tocNcx.element('content', attributes: {'src': 'info.xhtml'});
+              //   },
+              // );
+              // Add chapters
+              for (var chapter in work.chapters) {
+                final fileIndex = chapter.index.toString().padLeft(
+                  4,
+                  '0',
+                ); // e.g., chapter-0001
+                tocNcx.element(
+                  'navPoint',
+                  attributes: {
+                    'id': 'chapter-$fileIndex',
+                    'playOrder': '${chapter.index + 1}',
+                  },
+                  nest: () {
+                    tocNcx.element(
+                      'navLabel',
+                      nest: () {
+                        tocNcx.element('text', nest: chapter.title);
+                      },
+                    );
+                    tocNcx.element(
+                      'content',
+                      attributes: {'src': 'chapter-$fileIndex.xhtml'},
+                    );
+                  },
+                );
+              }
+            },
+          );
+        },
+      );
+      final tocNcxXml = tocNcx.buildDocument().toXmlString(pretty: true);
       archive.addFile(
         ArchiveFile(
-          'OEBPS/chapter-$fileIndex.xhtml',
-          utf8.encode(chapterHTML).length,
-          utf8.encode(chapterHTML),
+          'OEBPS/toc.ncx',
+          utf8.encode(tocNcxXml).length,
+          utf8.encode(tocNcxXml),
         ),
       );
+
+      // Add title page
+      final titleHTML = await _generateTitlePageHtml(work);
+      archive.addFile(
+        ArchiveFile(
+          'OEBPS/title.xhtml',
+          utf8.encode(titleHTML).length,
+          utf8.encode(titleHTML),
+        ),
+      );
+
+      // TODO: Add info page
+      // archive.addFile(
+      //   ArchiveFile(
+      //     'OEBPS/info.xhtml',
+      //     _generateInfoPageHtml(work).length,
+      //     utf8.encode(_generateInfoPageHtml(work)),
+      //   ),
+      // );
+
+      // Add chapters
+      for (var chapter in work.chapters) {
+        final fileIndex = chapter.index.toString().padLeft(
+          4,
+          '0',
+        ); // e.g., chapter-0001
+        final chapterHTML = await _generateChapterHtml(chapter, work.title);
+        archive.addFile(
+          ArchiveFile(
+            'OEBPS/chapter-$fileIndex.xhtml',
+            utf8.encode(chapterHTML).length,
+            utf8.encode(chapterHTML),
+          ),
+        );
+      }
+
+      // Add stylesheet
+      final stylesheetCSS = await _generateStylesheet();
+      archive.addFile(
+        ArchiveFile(
+          'OEBPS/stylesheet.css',
+          utf8.encode(stylesheetCSS).length,
+          utf8.encode(stylesheetCSS),
+        ),
+      );
+
+      // Write the archive to the file system
+      final file = File(filePath);
+      if (!(await file.parent.exists())) {
+        await file.parent.create(recursive: true);
+      }
+      await file.writeAsBytes(ZipEncoder().encode(archive) ?? []);
+      logger.i('EPUB file saved at $filePath');
+
+      return filePath;
+    } catch (e) {
+      logger.e('Failed to save EPUB file: $e');
+      rethrow; // Rethrow the exception to handle it upstream
     }
-
-    // Add stylesheet
-    final stylesheetCSS = await _generateStylesheet();
-    archive.addFile(
-      ArchiveFile(
-        'OEBPS/stylesheet.css',
-        utf8.encode(stylesheetCSS).length,
-        utf8.encode(stylesheetCSS),
-      ),
-    );
-
-    // Write the archive to the file system
-    final file = File(filePath);
-    if (!(await file.parent.exists())) {
-      await file.parent.create(recursive: true);
-    }
-    await file.writeAsBytes(ZipEncoder().encode(archive) ?? []);
-    logger.i('EPUB file saved at $filePath');
-
-    return filePath;
   }
 
   @override
@@ -613,23 +622,6 @@ class EpubFileService extends IFileService {
   Future<String> _generateTitlePageHtml(WorkModel work) async {
     // Load template for title page HTML
     final titleTemplate = await _loadTemplate('title_page_template.xhtml');
-
-    final authorHTML =
-        work.authors
-            .map(
-              (a) => '<a href="${a.sourceURL ?? '#'}">${sanitize(a.name)}</a>',
-            )
-            .toList();
-    final seriesHTML =
-        work.series
-            .map((s) => '<a href="${s.sourceURL}">${sanitize(s.title)}</a>')
-            .toList();
-    final fandomsHTML =
-        work.fandoms
-            .map(
-              (f) => '<a href="${f.sourceURLs.first}">${sanitize(f.name)}</a>',
-            )
-            .toList();
     final summaryHTML = _processHtmlContent(
       work.summary,
       'No summary available.',
@@ -642,13 +634,15 @@ class EpubFileService extends IFileService {
           work.authors
               .map((a) => {'name': sanitize(a.name), 'url': a.sourceURL ?? '#'})
               .toList(),
-      'fandoms_html':
-          fandomsHTML.isNotEmpty
-              ? fandomsHTML.join('<br/>')
-              : 'Unknown Fandom', // Already HTML, use {{{ }}} in template
-      'series_html':
-          seriesHTML.isNotEmpty
-              ? seriesHTML.join('<br/>')
+      'fandoms':
+          work.fandoms
+              .map((f) => {'name': sanitize(f.name), 'url': f.sourceURLs.first})
+              .toList(),
+      'series':
+          work.series.isNotEmpty
+              ? work.series
+                  .map((s) => {'title': sanitize(s.title), 'url': s.sourceURL})
+                  .toList()
               : null, // Use null for conditional check {{#series_html}}
       'summary_html': summaryHTML, // Already HTML, use {{{ }}} in template
       'word_count': work.wordCount?.toString() ?? 'N/A',
@@ -661,7 +655,7 @@ class EpubFileService extends IFileService {
           'N/A',
       // Add boolean flags if needed for more complex conditionals,
       // but Mustache often handles non-empty strings/lists correctly for {{#...}}
-      'has_series': seriesHTML.isNotEmpty, // Example boolean flag
+      'has_series': work.series.isNotEmpty, // Example boolean flag
     };
 
     // Populate template

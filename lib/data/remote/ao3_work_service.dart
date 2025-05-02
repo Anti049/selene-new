@@ -353,18 +353,23 @@ class AO3WorkService extends IWorkService {
         logger.e('No EPUB file service found for saving work.');
         return work; // Return work without saving
       }
-      final filePath = await epubFileService.saveFile(work, savePath);
-      if (filePath.isEmpty) {
-        logger.e('Failed to save work to file: $savePath');
-        return work; // Return work without file path
-      }
+      try {
+        final filePath = await epubFileService.saveFile(work, savePath);
+        if (filePath.isEmpty) {
+          logger.e('Failed to save work to file: $savePath');
+          return work; // Return work without file path
+        }
 
-      logger.i('Work saved to file: $filePath');
-      onProgress?.call(message: 'Work saved to file: $filePath');
-      return work.copyWith(filePath: filePath);
+        logger.i('Work saved to file: $filePath');
+        onProgress?.call(message: 'Work saved to file: $filePath');
+        return work.copyWith(filePath: filePath);
+      } catch (e) {
+        logger.e('Error saving work to file: $e');
+        rethrow;
+      }
     } catch (e) {
       logger.e('Error parsing work metadata: $e');
-      return null;
+      rethrow;
     }
   }
 
