@@ -114,7 +114,17 @@ class EpubFileService extends IFileService {
               }
               // - Summary (note that the summary is an HTML string that needs to be nested inside XML tags)
               if (work.summary != null) {
-                contentOpf.element('dc:description', nest: work.summary!);
+                // Convert HTML into text (separate <p> sections with line breaks, etc.)
+                // Example:
+                // Before
+                // <p>This is a summary.</p><p>It has multiple paragraphs.</p>
+                // After
+                // This is a summary.\n\nIt has multiple paragraphs.
+                String summary = _processHtmlContent(
+                  work.summary,
+                  'No summary available.',
+                );
+                contentOpf.element('dc:description', nest: summary);
               }
               // - Fandom(s)
               for (var fandom in work.fandoms) {
