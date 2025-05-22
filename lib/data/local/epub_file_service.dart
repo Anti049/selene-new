@@ -7,7 +7,10 @@ import 'package:flutter/services.dart';
 import 'package:html/parser.dart' show parseFragment;
 import 'package:html_unescape/html_unescape.dart';
 import 'package:mustache_template/mustache.dart';
+import 'package:selene/core/database/models/author.dart';
 import 'package:selene/core/database/models/chapter.dart';
+import 'package:selene/core/database/models/fandom.dart';
+import 'package:selene/core/database/models/tag.dart';
 import 'package:selene/core/database/models/work.dart';
 import 'package:selene/data/local/i_file_service.dart';
 import 'package:xml/xml.dart' as xml;
@@ -107,7 +110,7 @@ class EpubFileService extends IFileService {
                     contentOpf.attribute('opf:role', 'aut'); // Author role
                     contentOpf.text(author.name);
                     if (author.sourceURL != null) {
-                      contentOpf.attribute('opf:file-as', author.sourceURL!);
+                      contentOpf.attribute('href', author.sourceURL!);
                     }
                   },
                 );
@@ -120,11 +123,14 @@ class EpubFileService extends IFileService {
                 // <p>This is a summary.</p><p>It has multiple paragraphs.</p>
                 // After
                 // This is a summary.\n\nIt has multiple paragraphs.
+                String newDescription = work.summary!
+                    .replaceAll('<', '&lt;')
+                    .replaceAll('>', '&gt;');
                 String summary = _processHtmlContent(
                   work.summary,
                   'No summary available.',
                 );
-                contentOpf.element('dc:description', nest: summary);
+                contentOpf.element('dc:description', nest: newDescription);
               }
               // - Fandom(s)
               for (var fandom in work.fandoms) {
@@ -132,7 +138,7 @@ class EpubFileService extends IFileService {
                   'dc:subject',
                   nest: fandom.name,
                   attributes: {
-                    'opf:file-as':
+                    'href':
                         fandom.sourceURLs.isNotEmpty
                             ? fandom.sourceURLs.first
                             : fandom.name,
@@ -141,14 +147,16 @@ class EpubFileService extends IFileService {
               }
               // - Tags (need to be NOT dc:subject tags, but custom meta tags)
               for (var tag in work.tags) {
+                // Ensure that the tag name is not in the fandom list
+                if (work.fandoms.any((f) => f.name == tag.name)) {
+                  continue; // Skip if the tag is already a fandom
+                }
                 contentOpf.element(
                   'meta',
                   nest: tag.name,
                   attributes: {
                     'name': 'selene-tag-${tag.type.name.toLowerCase()}',
-                    'content': tag.name,
                     'type': tag.type.name.toLowerCase(),
-                    'opf:file-as': tag.sourceURL ?? tag.name,
                     'href': tag.sourceURL ?? '',
                   },
                 );
@@ -184,20 +192,14 @@ class EpubFileService extends IFileService {
               contentOpf.element(
                 'meta',
                 nest: work.status.label,
-                attributes: {
-                  'name': 'selene-work-status',
-                  'content': work.status.label,
-                },
+                attributes: {'name': 'selene-work-status'},
               );
               // - Cover Image (if available)
               if (work.coverURL != null) {
                 contentOpf.element(
                   'meta',
                   nest: work.coverURL!,
-                  attributes: {
-                    'name': 'selene-cover-image',
-                    'content': work.coverURL!,
-                  },
+                  attributes: {'name': 'selene-cover-image'},
                 );
               }
               // - Word Count
@@ -205,10 +207,7 @@ class EpubFileService extends IFileService {
                 contentOpf.element(
                   'meta',
                   nest: work.wordCount.toString(),
-                  attributes: {
-                    'name': 'selene-word-count',
-                    'content': work.wordCount.toString(),
-                  },
+                  attributes: {'name': 'selene-word-count'},
                 );
               }
             },
@@ -222,7 +221,7 @@ class EpubFileService extends IFileService {
               contentOpf.element(
                 'item',
                 attributes: {
-                  'id': 'toc',
+                  'id': 'ncx',
                   'href': 'toc.ncx',
                   'media-type': 'application/x-dtbncx+xml',
                 },
@@ -275,6 +274,9 @@ class EpubFileService extends IFileService {
           );
           contentOpf.element(
             'spine',
+            attributes: {
+              'toc': 'ncx', // Reference to the TOC file
+            },
             nest: () {
               // Define the spine items (the reading order)
               contentOpf.element(
@@ -540,8 +542,118 @@ class EpubFileService extends IFileService {
       final contentXml = xml.XmlDocument.parse(
         utf8.decode(contentFile.content),
       );
+      // Get the package element
+      final packageElement = contentXml.findElements('package').firstOrNull;
+      if (packageElement == null) {
+        logger.e('Package element not found in content file at $filePath');
+        return null; // Return null if package element is missing
+      }
+      // Parse the metadata from content.opf
+      final metadata = packageElement.findElements('metadata').firstOrNull;
+      if (metadata == null) {
+        logger.e('Metadata not found in content file at $filePath');
+        return null; // Return null if metadata is missing
+      }
+      final titleElement = metadata.findElements('dc:title').firstOrNull;
+      final title = titleElement?.innerText;
+      if (title == null) {
+        logger.e('Title not found in content file at $filePath');
+        return null; // Return null if title is missing
+      }
+      final identifierElement =
+          metadata.findElements('dc:identifier').firstOrNull;
+      final identifier = identifierElement?.innerText;
+      if (identifier == null) {
+        logger.e('Identifier not found in content file at $filePath');
+        return null; // Return null if identifier is missing
+      }
+      // Load authors
+      final authorElements = metadata.findElements('dc:creator');
+      final authors =
+          authorElements.map((e) {
+            final authorName = e.innerText;
+            final authorSourceURL = e.getAttribute('href');
+            return AuthorModel(name: authorName, sourceURL: authorSourceURL);
+          }).toList();
+      // Load source URL (if available)
+      final sourceURL = metadata
+          .findElements('dc:source')
+          .firstOrNullWhere((e) => e.innerText.isNotEmpty);
+      final sourceURLString = sourceURL?.innerText;
+      // Load subjects
+      final subjectElements = metadata.findElements('dc:subject');
+      final fandoms =
+          subjectElements.map((e) {
+            final fandomName = e.innerText;
+            final fandomSourceURL = e.getAttribute('href');
+            return FandomModel(
+              name: fandomName,
+              sourceURLs: fandomSourceURL != null ? [fandomSourceURL] : [],
+            );
+          }).toList();
+      // Load tags
+      final tagElements = metadata
+          .findElements('meta')
+          .where(
+            (e) => e.getAttribute('name')?.startsWith('selene-tag-') ?? false,
+          );
+      final tags =
+          tagElements.map((e) {
+            final tagName = e.innerText;
+            final tagType = e
+                .getAttribute('name')
+                ?.replaceFirst('selene-tag-', '');
+            final tagSourceURL = e.getAttribute('href');
+            return TagModel(
+              name: tagName,
+              type: TagType.fromString(tagType ?? ''),
+              sourceURL: tagSourceURL,
+            );
+          }).toList();
+      // Load publication date (dc:date where opf:event is 'publication')
+      final datePublishedElement = metadata
+          .findElements('dc:date')
+          .firstOrNullWhere(
+            (e) => e.getAttribute('opf:event') == 'publication',
+          );
+      final datePublished = datePublishedElement?.innerText;
+      // Load last updated date (dc:date where opf:event is 'update')
+      final dateUpdatedElement = metadata
+          .findElements('dc:date')
+          .firstOrNullWhere((e) => e.getAttribute('opf:event') == 'update');
+      final dateUpdated = dateUpdatedElement?.innerText;
+      // Load work status (meta where name is 'selene-work-status')
+      final statusElement = metadata
+          .findElements('meta')
+          .firstOrNullWhere(
+            (e) => e.getAttribute('name') == 'selene-work-status',
+          );
+      final status = statusElement?.innerText;
+      // Load word count (meta where name is 'selene-word-count')
+      final wordCountElement = metadata
+          .findElements('meta')
+          .firstOrNullWhere(
+            (e) => e.getAttribute('name') == 'selene-word-count',
+          );
 
       // Parse the EPUB data
+      final work = WorkModel(
+        title: title,
+        sourceURL: sourceURLString,
+        filePath: filePath,
+        authors: authors,
+        fandoms: fandoms,
+        tags: tags,
+        datePublished:
+            datePublished != null ? DateTime.parse(datePublished) : null,
+        dateUpdated: dateUpdated != null ? DateTime.parse(dateUpdated) : null,
+        wordCount:
+            wordCountElement != null
+                ? int.tryParse(wordCountElement.innerText)
+                : null,
+      );
+
+      return work;
     } catch (e) {
       logger.e('Failed to load EPUB file: $e');
       return null; // Return null if loading fails

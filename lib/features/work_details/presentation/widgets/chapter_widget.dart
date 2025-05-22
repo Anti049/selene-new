@@ -9,6 +9,7 @@ import 'package:selene/core/database/models/chapter.dart';
 import 'package:selene/core/database/models/work.dart';
 import 'package:selene/core/database/providers/library_providers.dart';
 import 'package:selene/core/utils/theming.dart';
+import 'package:selene/data/local/file_service_registry.dart';
 import 'package:selene/data/remote/work_service_registry.dart';
 import 'package:selene/features/download_queue/models/download_task.dart';
 import 'package:selene/features/download_queue/providers/download_queue_provider.dart';
@@ -244,8 +245,13 @@ class _ChapterWidgetState extends ConsumerState<ChapterWidget>
         crossFadeState:
             _isLoaded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
       ),
-      onTap: () {
+      onTap: () async {
         if (widget.work != null) {
+          final fileServiceRegistry = ref.watch(fileServiceRegistryProvider);
+          final fileService = fileServiceRegistry.getServiceByExtension(
+            '.epub',
+          );
+          final file = fileService?.loadFile(widget.work!.filePath ?? '');
           context.router.push(ReaderRoute(work: widget.work!));
           return;
         }

@@ -1,7 +1,10 @@
+import 'dart:io';
+
 import 'package:animated_visibility/animated_visibility.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:dartx/dartx.dart';
 import 'package:easy_refresh/easy_refresh.dart';
+import 'package:epub_view/epub_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
@@ -14,6 +17,7 @@ import 'package:selene/features/banners/providers/fullscreen_provider.dart';
 import 'package:selene/features/library/presentation/widgets/tag_chip.dart';
 import 'package:selene/features/reader/presentation/widgets/hyperlink.dart';
 import 'package:selene/features/reader/presentation/widgets/scrollable_page_view.dart';
+import 'package:vocsy_epub_viewer/epub_viewer.dart';
 
 @RoutePage()
 class ReaderScreen extends ConsumerStatefulWidget {
@@ -33,6 +37,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen>
   bool _showControls = false;
   late EasyRefreshController _refreshController;
   double _chapterProgress = 0.0;
+  late EpubController _epubController;
 
   @override
   void initState() {
@@ -44,6 +49,10 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen>
     _refreshController = EasyRefreshController(
       controlFinishRefresh: true,
       controlFinishLoad: true,
+    );
+    final file = File(widget.work.filePath ?? '');
+    _epubController = EpubController(
+      document: EpubDocument.openData(file.readAsBytesSync()),
     );
   }
 
@@ -320,6 +329,33 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen>
 
   @override
   Widget build(BuildContext context) {
+    // VocsyEpub.setConfig(
+    //   themeColor: context.theme.primaryColor,
+    //   nightMode: false,
+    //   enableTts: false,
+    // );
+    // VocsyEpub.open(widget.work.filePath ?? '');
+
+    return Scaffold(
+      appBar: PaddedAppBar(
+        // Show actual chapter name
+        title: EpubViewActualChapter(
+          controller: _epubController,
+          builder:
+              (chapterValue) => Text(
+                chapterValue?.chapter?.Title?.replaceAll('\n', '').trim() ?? '',
+                textAlign: TextAlign.start,
+              ),
+        ),
+      ),
+      // Show table of contents
+      drawer: Drawer(
+        child: EpubViewTableOfContents(controller: _epubController),
+      ),
+      // Show epub document
+      body: EpubView(controller: _epubController),
+    );
+
     final pages = [
       // _buildTitlePage(context), // Title page
       // _buildInfoPage(context), // Info page

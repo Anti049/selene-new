@@ -5,21 +5,20 @@ import 'package:selene/core/database/tables/preferences_table.dart';
 class Preference<T> {
   final Isar _isar;
   final T defaultValue;
-  final T Function(Preferences prefs) _getter;
+  final T? Function(Preferences prefs) _getter;
   final Preferences Function(Preferences prefs, T value) _setter;
 
   Preference({
     required Isar isar,
     required this.defaultValue,
-    required T Function(Preferences prefs) getter,
+    required T? Function(Preferences prefs) getter,
     required Preferences Function(Preferences prefs, T value) setter,
   }) : _isar = isar,
        _getter = getter,
        _setter = setter;
 
   // --- Read Operations ---
-  Preferences get prefs =>
-      _isar.preferences.getSync(kPreferencesID) ?? Preferences();
+  Preferences get prefs => _isar.preferences.getSync(kPreferencesID) ?? Preferences();
   T get() => _getter(prefs) ?? defaultValue;
   Stream<T> get stream => _isar.preferences
       .watchObject(kPreferencesID)

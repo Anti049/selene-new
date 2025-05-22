@@ -29,6 +29,7 @@ dependencies:
     easy_refresh: ^3.4.0
     ebook:
         git: https://github.com/Anti049/ebook.git
+    epub_view: ^3.2.0
     file_picker: 10.1.0
     # firebase_analytics: ^11.4.5
     # firebase_crashlytics: ^4.3.5

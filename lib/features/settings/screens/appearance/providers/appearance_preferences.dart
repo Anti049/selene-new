@@ -22,9 +22,7 @@ class AppearancePreferences {
     isar: _isar, // Pass Isar instance
     defaultValue: kDefaultThemeMode,
     getter: (prefs) => prefs.themeMode, // Getter logic remains similar
-    setter:
-        (prefs, value) =>
-            prefs.copyWith(themeMode: value), // Setter logic remains similar
+    setter: (prefs, value) => prefs.copyWith(themeMode: value), // Setter logic remains similar
   );
 
   late final Preference<String?> themeID = Preference<String?>(
@@ -37,28 +35,28 @@ class AppearancePreferences {
   late final Preference<double> contrastLevel = Preference<double>(
     isar: _isar,
     defaultValue: kDefaultContrastLevel,
-    getter: (prefs) => prefs.contrastLevel ?? kDefaultContrastLevel,
+    getter: (prefs) => prefs.contrastLevel,
     setter: (prefs, value) => prefs.copyWith(contrastLevel: value),
   );
 
   late final Preference<double> blendLevel = Preference<double>(
     isar: _isar,
     defaultValue: kDefaultBlendLevel,
-    getter: (prefs) => prefs.blendLevel ?? kDefaultBlendLevel,
+    getter: (prefs) => prefs.blendLevel,
     setter: (prefs, value) => prefs.copyWith(blendLevel: value),
   );
 
   late final Preference<bool> einkMode = Preference<bool>(
     isar: _isar,
     defaultValue: kDefaultEinkMode,
-    getter: (prefs) => prefs.einkMode ?? kDefaultEinkMode,
+    getter: (prefs) => prefs.einkMode,
     setter: (prefs, value) => prefs.copyWith(einkMode: value),
   );
 
   late final Preference<bool> pureBlackMode = Preference<bool>(
     isar: _isar,
     defaultValue: kDefaultPureBlackMode,
-    getter: (prefs) => prefs.pureBlackMode ?? kDefaultPureBlackMode,
+    getter: (prefs) => prefs.pureBlackMode,
     setter: (prefs, value) => prefs.copyWith(pureBlackMode: value),
   );
 }
@@ -131,8 +129,7 @@ List<SearchableSettingItem> appearanceSettings(Ref ref) {
           breadcrumbs: ['Appearance', 'Theme'],
           keywords: ['pure', 'black', 'mode'],
           enabled:
-              !appearancePrefs.einkMode.get() &&
-              appearancePrefs.themeMode.get() != ThemeMode.light,
+              !appearancePrefs.einkMode.get() && appearancePrefs.themeMode.get() != ThemeMode.light,
         ),
       ],
     ),
